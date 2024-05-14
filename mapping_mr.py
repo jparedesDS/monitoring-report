@@ -5,6 +5,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import NamedStyle, PatternFill, Border, Side, Font
 from datetime import datetime
 
+
 def process_vddl(df):
     mapping = {
         'P-22/001-S00': '', 'P-22/002-S00': '', 'P-22/003-S00': '', 'P-22/004-S00': '', 'P-22/005-S00': '',
@@ -28,7 +29,8 @@ def process_vddl(df):
         'P-22/091-S00': '', 'P-22/092-S00': '', 'P-22/093-S00': '', 'P-22/094-S00': '', 'P-22/095-S00': '',
         'P-22/096-S00': '', 'P-22/097-S00': '', 'P-22/098-S00': '', 'P-22/099-S00': '', 'P-22/100-S00': '',
         'P-22/101-S00': '', 'P-22/102-S00': '', 'P-22/103-S00': '', 'P-22/104-S00': '', 'P-22/105-S00': '',
-        'P-23/001-S00': '23-01-2023', 'P-23/002-S00': '03-01-2023', 'P-23/003-S00': '05-01-2023', 'P-23/004-S00': '', 'P-23/005-S00': '',
+        'P-23/001-S00': '23-01-2023', 'P-23/002-S00': '03-01-2023', 'P-23/003-S00': '05-01-2023', 'P-23/004-S00': '',
+        'P-23/005-S00': '',
         'P-23/006-S00': '', 'P-23/007-S00': '', 'P-23/008-S00': '', 'P-23/009-S00': '', 'P-23/010-S00': '',
         'P-23/011-S00': '', 'P-23/012-S00': '', 'P-23/013-S00': '', 'P-23/014-S00': '', 'P-23/015-S00': '',
         'P-23/016-S00': '', 'P-23/017-S00': '', 'P-23/018-S00': '', 'P-23/019-S00': '', 'P-23/020-S00': '',
@@ -251,6 +253,7 @@ def process_vddl(df):
 
     return df
 
+
 def identificar_cliente_por_PO(df):
     """
     Función para identificar el cliente a través del número de pedido (PO) utilizando expresiones regulares.
@@ -282,20 +285,24 @@ def identificar_cliente_por_PO(df):
     regex_pattern = r'((?:T\d+B\d+)|\d{5})'
 
     # Aplicar la expresión regular para extraer los primeros 5 dígitos del PO y mapear el cliente
-    df['Cliente'] = df['Nº PO'].apply(lambda x: mapping[re.match(regex_pattern, x).group(1)] if re.match(regex_pattern, x) else '')
+    df['Cliente'] = df['Nº PO'].apply(
+        lambda x: mapping[re.match(regex_pattern, x).group(1)] if re.match(regex_pattern, x) else '')
 
     return df
+
 
 # Función aplicable para el tratamiento y coloreado de datos en la tabla de excel
 def highlight_row_content(column, value, color):
     cont_val = column == value
     return [f'background-color: {color}' if cont_val.any() else '' for v in cont_val]
 
+
 # Función para definir el rango de las celdas
 def auto_fit_columns(sheet):
     if sheet:
         for col_index in range(sheet.getCells().getMaxDataColumn() + 1):
             sheet.autoFitColumn(col_index)
+
 
 # Coloreado y estilos de la tabla de excel
 def apply_excel_styles(today_date):
@@ -316,7 +323,7 @@ def apply_excel_styles(today_date):
     font_black = Font(color='000000')
 
     # Función para aplicar estilos a una hoja
-    def apply_styles_to_sheet(sheet, tab_color, max_row, max_col, column_exceptions=('J',)):
+    def apply_styles_to_sheet(sheet, tab_color, max_row, max_col, column_exceptions=('K',)):
         freeze = sheet['B2']
         sheet.freeze_panes = freeze
         sheet.sheet_properties.tabColor = tab_color
@@ -338,9 +345,9 @@ def apply_excel_styles(today_date):
             for cell in row:
                 cell.border = medium_dashed
 
-        cell_letters = sheet['J1']
-        cell_letters.fill = cell_filling
         cell_letters = sheet['K1']
+        cell_letters.fill = cell_filling
+        cell_letters = sheet['L1']
         cell_letters.fill = cell_filling
 
         for cell in sheet[1]:
@@ -351,19 +358,99 @@ def apply_excel_styles(today_date):
                 for cell in row:
                     cell.font = font_black
 
-        for fila in sheet.iter_rows(min_row=1, max_row=max_row, min_col=9, max_col=9):
+        for fila in sheet.iter_rows(min_row=1, max_row=max_row, min_col=1, max_col=max_col):
             for celda in fila:
                 if celda.value == 'Sí':
                     celda.font = Font(color='FF5B5B', bold=True)
+                if celda.value == 'LB':
+                    celda.font = Font(color='0072C8', bold=True)
+                if celda.value == 'AC':
+                    celda.font = Font(color='7030A0', bold=True)
+                if celda.value == 'SS':
+                    celda.font = Font(color='FF5B5B', bold=True)
 
-        sheet.auto_filter.ref = f"A1:{chr(65+max_col-1)}{max_row}"
+        sheet.auto_filter.ref = f"A1:{chr(65 + max_col - 1)}{max_row}"
 
     # Aplicar estilos a cada hoja
-    apply_styles_to_sheet(workbook['Documentación con comentarios'], "DBB054", 200, 21, ('J', 'K'))
-    apply_styles_to_sheet(workbook['Enviada para aprobación'], "B1E1B9", 200, 20, ('J'))
-    apply_styles_to_sheet(workbook['Documentación sin enviar'], "DDDDDD", 200, 13, ('J'))
-    apply_styles_to_sheet(workbook['CRÍTICOS'], "FFFFAB", 200, 13, ('J'))
+    apply_styles_to_sheet(workbook['Documentación con comentarios'], "DBB054", 200, 21, ('K', 'L'))
+    apply_styles_to_sheet(workbook['Enviada para aprobación'], "B1E1B9", 200, 20, ('K'))
+    apply_styles_to_sheet(workbook['Documentación sin enviar'], "DDDDDD", 200, 13, ('K'))
+    apply_styles_to_sheet(workbook['CRÍTICOS'], "FFFFAB", 200, 13, ('K'))
 
     # Guardar el archivo modificado
     workbook.save(archivo_excel)
     print("¡Creando los filtros de las columnas!")
+
+
+# Diccionario de mapeo para la función get_responsable_email()
+def apply_responsable(df):
+    mapping = {'P-22/001': "LB",
+                   'P-21/003': "LB", 'P-22/002': "LB", 'P-22/003': "AC", 'P-22/004': "AC",
+                   'P-22/005': "AC", 'P-22/006': "LB", 'P-22/007': "LB", 'P-22/008': "AC",
+                   'P-22/009': "LB", 'P-22/010': "AC", 'P-22/011': "LB", 'P-22/012': "AC",
+                   'P-22/013': "LB", 'P-22/014': "AC", 'P-22/015': "LB", 'P-22/016': "LB",
+                   'P-22/017': "AC", 'P-22/018': "AC", 'P-22/019': "AC", 'P-22/020': "LB",
+                   'P-22/021': "AC", 'P-22/022': "AC", 'P-22/023': "AC", 'P-22/024': "AC",
+                   'P-22/025': "LB", 'P-22/026': "LB", 'P-22/027': "LB", 'P-22/028': "AC",
+                   'P-22/029': "LB", 'P-22/030': "LB", 'P-22/031': "AC", 'P-22/032': "AC",
+                   'P-22/033': "LB", 'P-22/034': "LB", 'P-22/035': "AC", 'P-22/036': "AC",
+                   'P-22/037': "LB", 'P-22/038': "AC", 'P-22/039': "AC", 'P-22/040': "LB",
+                   'P-22/041': "LB", 'P-22/042': "AC", 'P-22/043': "AC", 'P-22/044': "AC",
+                   'P-22/045': "AC", 'P-22/046': "AC", 'P-22/047': "SS", 'P-22/048': "LB",
+                   'P-22/049': "LB", 'P-22/050': "LB", 'P-22/051': "AC", 'P-22/052': "AC",
+                   'P-22/053': "SS", 'P-22/054': "SS", 'P-22/055': "AC", 'P-22/056': "AC",
+                   'P-22/057': "AC", 'P-22/058': "AC", 'P-22/059': "AC", 'P-22/060': "AC",
+                   'P-22/061': "LB", 'P-22/062': "SS", 'P-22/063': "SS", 'P-22/064': "LB",
+                   'P-22/065': "AC", 'P-22/066': "AC", 'P-22/067': "AC", 'P-22/068': "AC",
+                   'P-22/069': "AC", 'P-22/070': "SS", 'P-22/071': "AC", 'P-22/072': "LB",
+                   'P-22/073': "AC", 'P-22/074': "LB", 'P-22/075': "SS", 'P-22/076': "LB",
+                   'P-22/077': "AC", 'P-22/078': "AC", 'P-22/079': "AC", 'P-22/080': "SS",
+                   'P-22/081': "AC", 'P-22/082': "LB", 'P-22/083': "AC", 'P-22/084': "LB",
+                   'P-22/085': "LB", 'P-22/086': "LB", 'P-22/087': "LB", 'P-22/088': "LB",
+                   'P-22/089': "LB", 'P-22/090': "LB", 'P-22/091': "LB", 'P-22/092': "LB",
+                   'P-22/093': "LB", 'P-22/094': "LB", 'P-22/095': "LB", 'P-22/096': "LB",
+                   'P-22/097': "LB", 'P-22/098': "LB", 'P-22/099': "LB", 'P-22/100': "LB",
+                   'P-22/101': "LB", 'P-22/102': "LB", 'P-22/103': "LB", 'P-22/104': "LB",
+                   'P-22/105': "LB",
+                   'P-23/001': "LB", 'P-23/002': "LB", 'P-23/003': "LB", 'P-23/004': "AC",
+                   'P-23/005': "AC", 'P-23/006': "AC", 'P-23/007': "LB", 'P-23/008': "AC",
+                   'P-23/009': "AC", 'P-23/010': "AC", 'P-23/011': "SS", 'P-23/012': "AC",
+                   'P-23/013': "LB", 'P-23/014': "SS", 'P-23/015': "AC", 'P-23/016': "AC",
+                   'P-23/017': "SS", 'P-23/018': "AC", 'P-23/019': "LB", 'P-23/020': "AC",
+                   'P-23/021': "LB", 'P-23/022': "LB", 'P-23/023': "AC", 'P-23/024': "LB",
+                   'P-23/025': "LB", 'P-23/026': "SS", 'P-23/027': "LB", 'P-23/028': "LB",
+                   'P-23/029': "LB", 'P-23/030': "LB", 'P-23/031': "AC", 'P-23/032': "AC",
+                   'P-23/033': "AC", 'P-23/034': "SS", 'P-23/035': "AC", 'P-23/036': "AC",
+                   'P-23/037': "LB", 'P-23/038': "LB", 'P-23/039': "LB", 'P-23/040': "AC",
+                   'P-23/041': "AC", 'P-23/042': "LB", 'P-23/043': "LB", 'P-23/044': "LB",
+                   'P-23/045': "AC", 'P-23/046': "SS", 'P-23/047': "AC", 'P-23/048': "SS",
+                   'P-23/049': "LB", 'P-23/050': "LB", 'P-23/051': "AC", 'P-23/052': "AC",
+                   'P-23/053': "AC", 'P-23/054': "AC", 'P-23/055': "AC", 'P-23/056': "SS",
+                   'P-23/057': "LB", 'P-23/058': "AC", 'P-23/059': "LB", 'P-23/060': "AC",
+                   'P-23/061': "LB", 'P-23/062': "AC", 'P-23/063': "AC", 'P-23/064': "AC",
+                   'P-23/065': "AC", 'P-23/066': "AC", 'P-23/067': "AC", 'P-23/068': "AC",
+                   'P-23/069': "AC", 'P-23/070': "AC", 'P-23/071': "AC", 'P-23/072': "LB",
+                   'P-23/073': "AC", 'P-23/074': "SS", 'P-23/075': "LB", 'P-23/076': "LB",
+                   'P-23/077': "AC", 'P-23/078': "AC", 'P-23/079': "LB", 'P-23/080': "AC",
+                   'P-23/081': "AC", 'P-23/082': "AC", 'P-23/083': "AC", 'P-23/084': "AC",
+                   'P-23/085': "AC", 'P-23/086': "AC", 'P-23/087': "AC", 'P-23/088': "AC",
+                   'P-23/089': "SS", 'P-23/090': "AC", 'P-23/091': "AC", 'P-23/092': "LB",
+                   'P-23/093': "AC", 'P-23/094': "LB", 'P-23/095': "AC", 'P-23/096': "AC",
+                   'P-23/097': "AC", 'P-23/098': "LB", 'P-23/099': "LB", 'P-23/100': "AC",
+                   'P-23/101': "AC", 'P-23/102': "AC", 'P-23/103': "LB", 'P-23/104': "AC",
+                   'P-23/105': "SS", 'P-24/001': "LB", 'P-24/002': "LB", 'P-24/003': "LB",
+                   'P-24/004': "AC", 'P-24/005': "AC", 'P-24/006': "AC", 'P-24/007': "AC",
+                   'P-24/008': "AC", 'P-24/009': "AC", 'P-24/010': "AC", 'P-24/011': "AC",
+                   'P-24/012': "SS", 'P-24/013': "AC", 'P-24/014': "AC", 'P-24/015': "SS",
+                   'P-24/016': "AC", 'P-24/017': "AC", 'P-24/018': "AC", 'P-24/019': "AC",
+                   'P-24/020': "AC", 'P-24/021': "AC", 'P-24/022': "AC", 'P-24/023': "AC",
+                   'P-24/024': "AC", 'P-24/025': "AC", 'P-24/026': "SS", 'P-24/027': "AC",
+                   'P-24/028': "AC", 'P-24/029': "AC", 'P-24/030': "AC", 'P-24/031': "AC",
+                   'P-24/032': "AC", 'P-24/033': "AC", 'P-24/034': "AC", 'P-24/035': "AC",
+                   'P-24/036': "AC", 'P-24/037': "AC", 'P-24/038': "AC", 'P-24/039': "AC",
+                   'P-24/040': "AC", 'P-24/041': "AC", 'P-24/042': "AC", 'P-24/043': "AC"}
+    # Extraemos
+    df['Responsable'] = df['Nº Pedido']
+
+    # Reconocer los 3 últimos números y modifica la columna 'Material' usando el mapeo proporcionado
+    df['Responsable'] = df['Responsable'].str[:8].map(mapping)

@@ -34,6 +34,7 @@ df.insert(18, 'Fecha Contractual', ((df['Fecha Prevista'] - df['Fecha Pedido']).
 df['Fecha Contractual'] = "Aprobación + " + df['Fecha Contractual'].astype(str) + ' Semanas'
 df.insert(16, "Fecha AP VDDL", df['Nº Pedido']) # Insertamos la columna 'Fecha AP VDDL'
 process_vddl(df) # Aplicar el mapping para cambiar el tipo de estado en la columna 'Fecha AP VDDL'
+apply_responsable(df)
 #identificar_cliente_por_PO(df) # Aplicar el mapping para cambiar el tipo de 'Cliente'
 # Insertamos la columna 'Días VDDL'
 df['Fecha AP VDDL'] = pd.to_datetime(df['Fecha AP VDDL'], format="mixed", dayfirst=True)
@@ -56,6 +57,7 @@ df2.insert(15, 'Fecha Contractual', ((df2['Fecha Prevista'] - df2['Fecha Pedido'
 df2['Fecha Contractual'] = "Aprobación + " + df2['Fecha Contractual'].astype(str) + ' Semanas'
 df2.insert(16, "Fecha AP VDDL", df2['Nº Pedido']) # Insertamos la columna 'Fecha AP VDDL'
 process_vddl(df2) # Aplicar el mapeo para cambiar el tipo de estado en la columna 'Fecha AP VDDL'
+apply_responsable(df2)
 #identificar_cliente_por_PO(df2) # Aplicar el mapping para cambiar el tipo de 'Cliente'
 # Insertamos la columna 'Días VDDL'
 df2['Fecha AP VDDL'] = pd.to_datetime(df2['Fecha AP VDDL'], format="mixed", dayfirst=True)
@@ -77,6 +79,7 @@ df3.insert(14, "Días Devolución", (today_date - df3['Fecha']).dt.days) # Inser
 # Añadimos la columna 'Fecha Contractual'
 df3.insert(15, 'Fecha Contractual', ((df3['Fecha Prevista'] - df3['Fecha Pedido']).dt.days // 7))
 df3['Fecha Contractual'] = "Aprobación + " + df3['Fecha Contractual'].astype(str) + 'Semanas'
+apply_responsable(df3)
 #identificar_cliente_por_PO(df3) # Aplicar el mapping para cambiar el tipo de 'Cliente'
 # Transformamos todas las fechas al formato 'DIA-MES-AÑO' sin la hora
 df3['Fecha'] = df3['Fecha'].dt.date
@@ -87,10 +90,10 @@ critics_si = df3[df3['Crítico'] == 'Sí'] # Filtrar los documentos que tienen '
 print(df3)
 
 # Reorganizamos las columnas
-df = df.reindex(columns=['Nº Pedido', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
-df2 = df2.reindex(columns=['Nº Pedido', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
-df3 = critics_no.reindex(columns=['Nº Pedido', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
-df4 = critics_si.reindex(columns=['Nº Pedido', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
+df = df.reindex(columns=['Nº Pedido', 'Responsable', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
+df2 = df2.reindex(columns=['Nº Pedido', 'Responsable', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
+df3 = critics_no.reindex(columns=['Nº Pedido', 'Responsable', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
+df4 = critics_si.reindex(columns=['Nº Pedido', 'Responsable', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
 # Se genera archivo excel para su almacenamiento
 df.to_excel('.\\data\\pending_' + str(today_date_str) + '.xlsx', index=False)
 df2.to_excel('.\\data\\under_review_' + str(today_date_str) + '.xlsx', index=False)
