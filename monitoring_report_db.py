@@ -22,3 +22,9 @@ query_to_upload = """SELECT *
                     WHERE "Estado"
                     LIKE 'np.nan'"""
 df3 = pd.read_sql_query(query_to_upload, engine)
+
+# Consulta SQL para obtener el total de los registros
+query_to_graphics = """SELECT *
+                    FROM table.table
+                    """
+df5 = pd.read_sql_query(query_to_graphics, engine)
