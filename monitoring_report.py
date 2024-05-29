@@ -8,8 +8,9 @@ import asposecells
 jpype.startJVM()
 from asposecells.api import Workbook
 from openpyxl.reader.excel import load_workbook
-from mapping_mr import *
-from apply_style_mr import *
+from tools.mapping_mr import *
+from tools.apply_style_mr import *
+
 
 start_time = time.time()
 # Ruta del archivo Excel existente
@@ -107,7 +108,7 @@ suma_total_general = df5['Aprobado']
 porcentaje_total = (suma_total_general / suma_total) * 100
 df5['% Completado'] = porcentaje_total
 print(df5)
-print("Generando porcentaje del total representado por los aprobados...")
+print("Generando porcentaje total de los pedidos...")
 
 # Reorganizamos las columnas
 df = df.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
@@ -138,7 +139,6 @@ with pd.ExcelWriter('C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitor
     style_sheet_4 = df4.style.apply(highlight_row_content, value='Sin Enviar', color='#FFFFAB', subset=["Estado"], axis=1).apply(highlight_row_content, value=" ", color='#FFFFAB', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_to_upload'
     style_sheet_4.to_excel(writer, sheet_name='CRÍTICOS', index=False) # Escribir el DataFrame con estilos en la hoja 'to_upload'
     df5.to_excel(writer, sheet_name='DATA', index=False) # Escribir el DataFrame con estilos en la hoja 'pending'
-
 print("¡Estilo, formato y color aplicado correctamente a todas las hojas del excel!")
 
 
