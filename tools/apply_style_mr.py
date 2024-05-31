@@ -2,6 +2,8 @@
 from openpyxl import load_workbook
 from openpyxl.styles import NamedStyle, PatternFill, Border, Side, Font
 from openpyxl.chart import BarChart, Reference
+from openpyxl.styles.differential import DifferentialStyle
+from openpyxl.formatting.rule import Rule
 from datetime import datetime
 
 # Función aplicable para el tratamiento y coloreado de datos en la tabla de excel
@@ -35,6 +37,17 @@ def apply_excel_styles(today_date):
                            bottom=Side(style='thin'))
     font_white = Font(color='FFFFFF', bold=True)
     font_black = Font(color='000000')
+
+    # Definir el estilo condicional para fechas de pedido superiores a las fechas previstas
+    red_fill = PatternFill(start_color="FF5B5B", end_color="FF5B5B", fill_type="solid")
+    diff_style = DifferentialStyle(fill=red_fill)
+    rule = Rule(type="expression", dxf=diff_style)
+    rule.formula = ["$A2>$B2"]  # Ajustar según las columnas de fechas
+
+    # Definir el estilo condicional para días de devolución >= 15
+    red_fill_2 = Font(color="FF5B5B", bold=True)
+    diff_style_devolucion = DifferentialStyle(font=red_fill_2)
+    rule_devolucion = Rule(type="cellIs", operator="greaterThanOrEqual", formula=["30"], dxf=diff_style_devolucion)
 
     # Función para aplicar estilos a una hoja
     def apply_styles_to_sheet(sheet, tab_color, max_row, max_col, column_exceptions=('K',)):
@@ -84,6 +97,12 @@ def apply_excel_styles(today_date):
                     celda.font = Font(color='FF5B5B', bold=True)
 
         sheet.auto_filter.ref = f"A1:{chr(65 + max_col - 1)}{max_row}"
+
+        # Aplicar la regla de formato condicional fechas pedidos y prevista
+        #sheet.conditional_formatting.add(f"P2:Q2{max_row}", rule)
+        # Definir el estilo condicional para días de devolución >= 15
+        sheet.conditional_formatting.add(f"O2:O{max_row}", rule_devolucion)
+
 
     def add_chart(sheet):
         chart = BarChart()
