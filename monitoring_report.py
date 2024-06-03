@@ -14,10 +14,10 @@ from tools.apply_style_mr import *
 
 start_time = time.time()
 # Ruta del archivo Excel existente
-path_pending = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\pending.xlsx'
-path_under_review = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\under_review.xlsx'
-path_to_upload = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\to_upload.xlsx'
-path_to_graphics = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\total.xlsx'
+path_pending = 'C:\\Users\\xhito\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\pending.xlsx'
+path_under_review = 'C:\\Users\\xhito\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\under_review.xlsx'
+path_to_upload = 'C:\\Users\\xhito\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\to_upload.xlsx'
+path_to_graphics = 'C:\\Users\\xhito\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\total.xlsx'
 # Leer el DataFrame desde una hoja existente
 df = pd.read_excel(path_pending)
 df2 = pd.read_excel(path_under_review)
