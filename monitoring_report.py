@@ -133,14 +133,60 @@ df_cal_pla['Pendiente'] = sin_enviar
 df_cal_pla = df_cal_pla.reindex(columns=['Nº Pedido', 'Aprobados', 'Pendiente'])
 df_cal_pla = df_cal_pla[df_cal_pla['Pendiente'] > 0]
 
+# Leer la hoja "DATA" usando pandas para análisis
+df_planos = pd.read_excel(path_to_graphics)
+# Filtrar por 'Tipo Doc.'
+df_planos = df_planos[df_planos['Tipo Doc.'] == 'Planos']
+# Rellenar valores nulos en 'Estado' con 'Sin Enviar'
+df_planos['Estado'] = df_planos['Estado'].fillna('Sin Enviar')
+# Contar la frecuencia de cada estado por 'Nº Pedido'
+df_planos = df_planos.groupby(['Nº Pedido', 'Estado']).size().unstack(fill_value=0).reset_index()
+# Calcular el total y el porcentaje completado
+df_planos['Total'] = df_planos.iloc[:, 1:].sum(axis=1)
+suma_total = df_planos['Total']
+suma_total_general = df_planos['Aprobado']
+porcentaje_total = (suma_total_general / suma_total) * 100
+df_planos['% Completado'] = porcentaje_total
+# Calcular 'Aprobados' y 'Sin_Enviar' usando get para evitar errores si las columnas no existen
+aprobados = df_planos.get('Aprobado', 0) + df_planos.get('Enviado', 0)
+sin_enviar = df_planos.get('Com. Menores', 0) + df_planos.get('Sin Enviar', 0) + df_planos.get('Com. Mayores', 0) + df_planos.get('Rechazado', 0)
+df_planos['Aprobados'] = aprobados
+df_planos['Pendiente'] = sin_enviar
+# Reordenar columnas y filtrar por 'Sin_Enviar' > 0
+df_planos = df_planos.reindex(columns=['Nº Pedido', 'Aprobados', 'Pendiente'])
+df_planos = df_planos[df_planos['Pendiente'] > 0]
+print(df_planos)
+
 # Reorganizamos las columnas
 df = df.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
 df2 = df2.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista',  'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
 df3 = critics_no.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
 df4 = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
-df_cal_pla.to_excel('.\\data\\df_graphics_' + str(today_date_str) + '.xlsx', index=False)
+df_cal_pla.to_excel('.\\data\\df_cal_pla_' + str(today_date_str) + '.xlsx', index=False)
+df_planos.to_excel('.\\data\\df_planos_' + str(today_date_str) + '.xlsx', index=False)
 print("¡Generando columnas...!")
 
+# Crear un archivo Excel y escribir ambos DataFrames
+output_path = f'./data/merged_data_{today_date_str}.xlsx'
+with pd.ExcelWriter(output_path, engine='xlsxwriter') as writer:
+    # Escribir df_cal_pla en la hoja de cálculo
+    df_cal_pla.to_excel(writer, sheet_name='DATA', index=False)
+    # Obtener el objeto workbook y worksheet
+    workbook = writer.book
+    worksheet = writer.sheets['DATA']
+    # Escribir df_planos a partir de la columna N
+    startrow = 0
+    startcol = 11  # Columna N es la columna 13 (índice 12 en 0-based indexing)
+    # Escribir encabezados de df_planos a partir de la columna N
+    for c_idx, value in enumerate(df_planos.columns.values):
+        worksheet.write(startrow, startcol + c_idx, value)
+    # Escribir datos de df_planos a partir de la columna N
+    for r_idx, row in enumerate(df_planos.values):
+        for c_idx, value in enumerate(row):
+            worksheet.write(startrow + r_idx + 1, startcol + c_idx, value)
+
+graph_merge = f'./data/merged_data_{today_date_str}.xlsx'
+df_graph_merge = pd.read_excel(graph_merge)
 
 # Seleccionamos las columnas que van a ser coloreadas según el 'ESTADO' que tiene la documentación
 with pd.ExcelWriter(r'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data\\monitoring_report_' + str(today_date_str) + '.xlsx', engine='xlsxwriter') as writer:
@@ -157,8 +203,8 @@ with pd.ExcelWriter(r'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monito
     style_sheet_3.to_excel(writer, sheet_name='Documentación sin enviar', index=False) # Escribir el DataFrame con estilos en la hoja 'to_upload'
     style_sheet_4 = df4.style.apply(highlight_row_content, value='Sin Enviar', color='#FFFFAB', subset=["Estado"], axis=1).apply(highlight_row_content, value=" ", color='#FFFFAB', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_to_upload'
     style_sheet_4.to_excel(writer, sheet_name='CRÍTICOS', index=False) # Escribir el DataFrame con estilos en la hoja 'to_upload'
+    df_graph_merge.to_excel(writer, sheet_name='GRAPH 1', index=False)
     df5.to_excel(writer, sheet_name='DATA', index=False) # Escribir el DataFrame con estilos en la hoja 'pending'
-    df_cal_pla.to_excel(writer, sheet_name='GRAPH', index=False)
 print("¡Estilo, formato y color aplicado correctamente a todas las hojas del excel!")
 
 
@@ -169,8 +215,8 @@ sheets = {"Documentación con comentarios": wb.getWorksheets().get("Documentaci�
           "Enviada para aprobación": wb.getWorksheets().get("Enviada para aprobación"),
           "Documentación sin enviar": wb.getWorksheets().get("Documentación sin enviar"),
           "CRÍTICOS": wb.getWorksheets().get("CRÍTICOS"),
-          "DATA":wb.getWorksheets().get("DATA"),
-          "GRAPH": wb.getWorksheets().get("GRAPH"),}
+          "GRAPH 1": wb.getWorksheets().get("GRAPH 1"),
+          "DATA":wb.getWorksheets().get("DATA")}
 
 # Ajuste automático de todas las columnas en cada hoja
 for sheet_name, sheet in sheets.items():
