@@ -14,10 +14,10 @@ from tools.apply_style_mr import *
 
 start_time = time.time()
 # Ruta del archivo Excel existente
-path_pending = 'C:\\Users\\xhito\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\pending.xlsx'
-path_under_review = 'C:\\Users\\xhito\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\under_review.xlsx'
-path_to_upload = 'C:\\Users\\xhito\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\to_upload.xlsx'
-path_to_graphics = 'C:\\Users\\xhito\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\total.xlsx'
+path_pending = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\pending.xlsx'
+path_under_review = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\under_review.xlsx'
+path_to_upload = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\to_upload.xlsx'
+path_to_graphics = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\total.xlsx'
 # Leer el DataFrame desde una hoja existente
 df = pd.read_excel(path_pending)
 df2 = pd.read_excel(path_under_review)
@@ -110,21 +110,40 @@ df5['% Completado'] = porcentaje_total
 print(df5)
 print("Generando porcentaje total de los pedidos...")
 
+# Leer la hoja "DATA" usando pandas para análisis
+df_cal_pla = pd.read_excel(path_to_graphics)
+# Filtrar por 'Tipo Doc.'
+df_cal_pla = df_cal_pla[df_cal_pla['Tipo Doc.'] == 'Cálculo y plano']
+# Rellenar valores nulos en 'Estado' con 'Sin Enviar'
+df_cal_pla['Estado'] = df_cal_pla['Estado'].fillna('Sin Enviar')
+# Contar la frecuencia de cada estado por 'Nº Pedido'
+df_cal_pla = df_cal_pla.groupby(['Nº Pedido', 'Estado']).size().unstack(fill_value=0).reset_index()
+# Calcular el total y el porcentaje completado
+df_cal_pla['Total'] = df_cal_pla.iloc[:, 1:].sum(axis=1)
+suma_total = df_cal_pla['Total']
+suma_total_general = df_cal_pla['Aprobado']
+porcentaje_total = (suma_total_general / suma_total) * 100
+df_cal_pla['% Completado'] = porcentaje_total
+# Calcular 'Aprobados' y 'Sin_Enviar' usando get para evitar errores si las columnas no existen
+aprobados = df_cal_pla.get('Aprobado', 0) + df_cal_pla.get('Enviado', 0)
+sin_enviar = df_cal_pla.get('Com. Menores', 0) + df_cal_pla.get('Sin Enviar', 0) + df_cal_pla.get('Com. Mayores', 0) + df_cal_pla.get('Rechazado', 0)
+df_cal_pla['Aprobados'] = aprobados
+df_cal_pla['Pendiente'] = sin_enviar
+# Reordenar columnas y filtrar por 'Sin_Enviar' > 0
+df_cal_pla = df_cal_pla.reindex(columns=['Nº Pedido', 'Aprobados', 'Pendiente'])
+df_cal_pla = df_cal_pla[df_cal_pla['Pendiente'] > 0]
+
 # Reorganizamos las columnas
 df = df.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
 df2 = df2.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista',  'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
 df3 = critics_no.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
 df4 = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
-# Se genera archivo excel para su almacenamiento
-#df.to_excel('.\\data\\pending_' + str(today_date_str) + '.xlsx', index=False)
-#df2.to_excel('.\\data\\under_review_' + str(today_date_str) + '.xlsx', index=False)
-#df3.to_excel('.\\data\\to_upload_' + str(today_date_str) + '.xlsx', index=False)
-#df4.to_excel('.\\data\\to_upload_criticos_' + str(today_date_str) + '.xlsx', index=False)
-#df5.to_excel('.\\data\\df_graphics_' + str(today_date_str) + '.xlsx', index=False)
+df_cal_pla.to_excel('.\\data\\df_graphics_' + str(today_date_str) + '.xlsx', index=False)
 print("¡Generando columnas...!")
 
+
 # Seleccionamos las columnas que van a ser coloreadas según el 'ESTADO' que tiene la documentación
-with pd.ExcelWriter('C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data\\monitoring_report_' + str(today_date_str) + '.xlsx', engine='xlsxwriter') as writer:
+with pd.ExcelWriter(r'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data\\monitoring_report_' + str(today_date_str) + '.xlsx', engine='xlsxwriter') as writer:
     # Aplicar estilos a cada hoja de excel
     style_sheet = df.style.apply(
         highlight_row_content, value="Rechazado", color='#FFA19A', subset=["Estado", "Notas"], axis=1).apply(
@@ -139,6 +158,7 @@ with pd.ExcelWriter('C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitor
     style_sheet_4 = df4.style.apply(highlight_row_content, value='Sin Enviar', color='#FFFFAB', subset=["Estado"], axis=1).apply(highlight_row_content, value=" ", color='#FFFFAB', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_to_upload'
     style_sheet_4.to_excel(writer, sheet_name='CRÍTICOS', index=False) # Escribir el DataFrame con estilos en la hoja 'to_upload'
     df5.to_excel(writer, sheet_name='DATA', index=False) # Escribir el DataFrame con estilos en la hoja 'pending'
+    df_cal_pla.to_excel(writer, sheet_name='GRAPH', index=False)
 print("¡Estilo, formato y color aplicado correctamente a todas las hojas del excel!")
 
 
@@ -149,7 +169,8 @@ sheets = {"Documentación con comentarios": wb.getWorksheets().get("Documentaci�
           "Enviada para aprobación": wb.getWorksheets().get("Enviada para aprobación"),
           "Documentación sin enviar": wb.getWorksheets().get("Documentación sin enviar"),
           "CRÍTICOS": wb.getWorksheets().get("CRÍTICOS"),
-          "DATA":wb.getWorksheets().get("DATA")}
+          "DATA":wb.getWorksheets().get("DATA"),
+          "GRAPH": wb.getWorksheets().get("GRAPH"),}
 
 # Ajuste automático de todas las columnas en cada hoja
 for sheet_name, sheet in sheets.items():

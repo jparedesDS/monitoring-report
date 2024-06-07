@@ -1,5 +1,6 @@
 # Imports
 from openpyxl import load_workbook
+from openpyxl.chart.label import DataLabelList
 from openpyxl.styles import NamedStyle, PatternFill, Border, Side, Font
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles.differential import DifferentialStyle
@@ -47,7 +48,7 @@ def apply_excel_styles(today_date):
     # Definir el estilo condicional para días de devolución >= 15
     red_fill_2 = Font(color="FF5B5B", bold=True)
     diff_style_devolucion = DifferentialStyle(font=red_fill_2)
-    rule_devolucion = Rule(type="cellIs", operator="greaterThanOrEqual", formula=["30"], dxf=diff_style_devolucion)
+    rule_devolucion = Rule(type="cellIs", operator="greaterThanOrEqual", formula=["15"], dxf=diff_style_devolucion)
 
     # Función para aplicar estilos a una hoja
     def apply_styles_to_sheet(sheet, tab_color, max_row, max_col, column_exceptions=('K',)):
@@ -142,6 +143,59 @@ def apply_excel_styles(today_date):
             cell = sheet[f'{col}1']
             cell.fill = PatternFill(fill_type=None)
 
+    def add_stacked_bar_chart(sheet):
+        chart = BarChart()
+        chart.type = "col"
+        chart.title = "Cálculos y Planos"
+        chart.style = 12
+        chart.y_axis.title = 'DOCUMENTACIÓN'
+        chart.x_axis.title = 'Nº DE PEDIDO'
+        chart.varyColors = True
+
+        # Encontrar la fila que contiene los datos
+        min_row = None
+        for row in sheet.iter_rows():
+            if min_row is None:
+                for cell in row:
+                    if cell.value is not None:
+                        min_row = row[2].row
+                        break
+
+        # Si no se encontraron datos, salir de la función
+        if min_row is None:
+            print("No se encontraron datos en la hoja.")
+            return
+
+        max_row = sheet.max_row
+        max_col = 3
+
+        # Determinar el rango de columnas
+        min_col = 2  # Empezamos desde la segunda columna (suponiendo que la primera contiene etiquetas)
+        for cell in sheet[min_row]:
+            if cell.value is not None:
+                break
+            min_col += 1
+
+        # Seleccionar los datos y categorías
+        data = Reference(sheet, min_col=min_col, min_row=min_row, max_row=max_row, max_col=max_col)
+        categories = Reference(sheet, min_col=1, min_row=2, max_row=max_row, max_col=1)
+
+        chart.add_data(data, titles_from_data=True)
+        chart.set_categories(categories)
+
+        # Habilitar etiquetas de datos
+        chart.dataLabels = DataLabelList()
+        chart.dataLabels.showVal = True
+
+        # Posicionar y escalar el gráfico
+        sheet.add_chart(chart, "D2")
+        chart.width = 17
+        chart.height = 13
+
+        for col in ['K', 'L']:
+            cell = sheet[f'{col}1']
+            cell.fill = PatternFill(fill_type=None)
+
     # Aplicar estilos a cada hoja
     apply_styles_to_sheet(workbook['Documentación con comentarios'], "DBB054", 200, 21, ('K', 'L'))
     apply_styles_to_sheet(workbook['Enviada para aprobación'], "B1E1B9", 200, 20, ('K'))
@@ -150,6 +204,9 @@ def apply_excel_styles(today_date):
     grafico_sheet = workbook['DATA']
     apply_styles_to_sheet(grafico_sheet, "FFAAAB", 110, 10, ('K','L','M'))
     add_chart(grafico_sheet)
+    grafico_planos = workbook['GRAPH']
+    apply_styles_to_sheet(grafico_planos, "000000", 2, 3)
+    add_stacked_bar_chart(grafico_planos)
 
     # Guardar el archivo modificado
     workbook.save(archivo_excel)
