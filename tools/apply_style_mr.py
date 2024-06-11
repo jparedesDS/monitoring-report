@@ -117,7 +117,7 @@ def apply_excel_styles(today_date):
         filtered_categories = []
         filtered_data = []
         for row in range(2, sheet.max_row + 1):  # Asumiendo que la primera fila tiene encabezados
-            porcentaje_completado = sheet.cell(row=row, column=10).value
+            porcentaje_completado = sheet.cell(row=row, column=9).value
             if porcentaje_completado is not None and porcentaje_completado < 100:
                 pedido = sheet.cell(row=row, column=1).value
                 filtered_categories.append(pedido)
@@ -201,7 +201,7 @@ def apply_excel_styles(today_date):
         chart.type = "col"
         chart.title = "Planos"
         chart.style = 10
-        chart.y_axis.title = 'DOCUMENTACIÓN'
+        chart.y_axis.title = 'DOCUMENTOS'
         chart.x_axis.title = 'Nº DE PEDIDO'
         chart.varyColors = "0000FFFF"
 
