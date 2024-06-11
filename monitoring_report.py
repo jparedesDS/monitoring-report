@@ -101,6 +101,8 @@ print(df3)
 df5['Estado'] = df5['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
 # Contar la frecuencia de cada estado por 'Nº Pedido'
 df5 = df5.groupby(['Nº Pedido', 'Estado']).size().unstack(fill_value=0).reset_index()
+# Eliminar la columna 'Eliminado' si existe
+df5 = df5.drop(columns=['Eliminado'])
 df5['Total'] = df5.iloc[:, 1:8].sum(axis=1)
 suma_total = df5['Total']
 suma_total_general = df5['Aprobado']
@@ -127,10 +129,10 @@ df_cal_pla['% Completado'] = porcentaje_total
 # Calcular 'Aprobados' y 'Sin_Enviar' usando get para evitar errores si las columnas no existen
 aprobados = df_cal_pla.get('Aprobado', 0) + df_cal_pla.get('Enviado', 0)
 sin_enviar = df_cal_pla.get('Com. Menores', 0) + df_cal_pla.get('Sin Enviar', 0) + df_cal_pla.get('Com. Mayores', 0) + df_cal_pla.get('Rechazado', 0)
-df_cal_pla['Aprobados'] = aprobados
+df_cal_pla['Enviados'] = aprobados
 df_cal_pla['Pendiente'] = sin_enviar
 # Reordenar columnas y filtrar por 'Sin_Enviar' > 0
-df_cal_pla = df_cal_pla.reindex(columns=['Nº Pedido', 'Aprobados', 'Pendiente'])
+df_cal_pla = df_cal_pla.reindex(columns=['Nº Pedido', 'Enviados', 'Pendiente'])
 df_cal_pla = df_cal_pla[df_cal_pla['Pendiente'] > 0]
 
 # Leer la hoja "DATA" usando pandas para análisis
@@ -150,10 +152,10 @@ df_planos['% Completado'] = porcentaje_total
 # Calcular 'Aprobados' y 'Sin_Enviar' usando get para evitar errores si las columnas no existen
 aprobados = df_planos.get('Aprobado', 0) + df_planos.get('Enviado', 0)
 sin_enviar = df_planos.get('Com. Menores', 0) + df_planos.get('Sin Enviar', 0) + df_planos.get('Com. Mayores', 0) + df_planos.get('Rechazado', 0)
-df_planos['Aprobados'] = aprobados
+df_planos['Enviados'] = aprobados
 df_planos['Pendiente'] = sin_enviar
 # Reordenar columnas y filtrar por 'Sin_Enviar' > 0
-df_planos = df_planos.reindex(columns=['Nº Pedido', 'Aprobados', 'Pendiente'])
+df_planos = df_planos.reindex(columns=['Nº Pedido', 'Enviados', 'Pendiente'])
 df_planos = df_planos[df_planos['Pendiente'] > 0]
 print(df_planos)
 
