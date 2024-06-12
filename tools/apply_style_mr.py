@@ -96,6 +96,8 @@ def apply_excel_styles(today_date):
                     celda.font = Font(color='7030A0', bold=True)
                 if celda.value == 'SS':
                     celda.font = Font(color='FF5B5B', bold=True)
+                if celda.value == 100:
+                    celda.font = Font(color='FF5B5B', bold=True)
 
         sheet.auto_filter.ref = f"A1:{chr(65 + max_col - 1)}{max_row}"
 
@@ -146,7 +148,7 @@ def apply_excel_styles(today_date):
     def add_stacked_bar_chart_cal_pla(sheet):
         chart = BarChart()
         chart.type = "col"
-        chart.title = "Cálculos y Planos"
+        chart.title = "Estado Doc. Cálculos y Planos"
         chart.style = 10
         chart.y_axis.title = 'DOCUMENTOS'
         chart.x_axis.title = 'Nº DE PEDIDO'
@@ -188,7 +190,7 @@ def apply_excel_styles(today_date):
         chart.dataLabels.showVal = True
 
         # Posicionar y escalar el gráfico
-        sheet.add_chart(chart, "D2")
+        sheet.add_chart(chart, "D1")
         chart.width = 17
         chart.height = 10
 
@@ -199,7 +201,7 @@ def apply_excel_styles(today_date):
     def add_stacked_bar_chart_planos(sheet):
         chart = BarChart()
         chart.type = "col"
-        chart.title = "Planos"
+        chart.title = "Estado Doc. Planos"
         chart.style = 10
         chart.y_axis.title = 'DOCUMENTOS'
         chart.x_axis.title = 'Nº DE PEDIDO'
@@ -241,33 +243,33 @@ def apply_excel_styles(today_date):
         chart.dataLabels.showVal = True
 
         # Posicionar y escalar el gráfico
-        sheet.add_chart(chart, "O2")
+        sheet.add_chart(chart, "O1")
         chart.width = 17
         chart.height = 10
 
+        # Iterar a través de cada columna y fila para aplicar los cambios
+        start_row = 1
+        end_row = 10
         for col in ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',]:
-            cell = sheet[f'{col}1']
-            cell.fill = PatternFill(fill_type=None)
-            cell.border = None
-        for col in ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',]:
-            cell = sheet[f'{col}2']
-            cell.fill = PatternFill(fill_type=None)
-            cell.border = None
+            for row in range(start_row, end_row + 1):
+                cell = sheet[f'{col}{row}']
+                cell.fill = PatternFill(fill_type=None)  # Eliminar el relleno
+                cell.border = Border()  # Eliminar los bordes
         cell_letters = sheet['L1']
         cell_letters.fill = cell_filling
 
     # Aplicar estilos a cada hoja
-    apply_styles_to_sheet(workbook['Documentación con comentarios'], "DBB054", 200, 21, ('K', 'L'))
-    apply_styles_to_sheet(workbook['Enviada para aprobación'], "B1E1B9", 200, 20, ('K'))
-    apply_styles_to_sheet(workbook['Documentación sin enviar'], "DDDDDD", 200, 13, ('K'))
-    apply_styles_to_sheet(workbook['CRÍTICOS'], "FFFFAB", 200, 13, ('K'))
-    grafico_sheet = workbook['DATA']
+    apply_styles_to_sheet(workbook['DOC. COMENTARIOS'], "DBB054", 200, 21, ('K', 'L'))
+    apply_styles_to_sheet(workbook['DOC. ENVIADA'], "B1E1B9", 200, 20, ('K'))
+    apply_styles_to_sheet(workbook['DOC. SIN ENVIAR'], "DDDDDD", 200, 13, ('K'))
+    apply_styles_to_sheet(workbook['CRÍTICOS'], "FFFF46", 200, 13, ('K'))
+    grafico_sheet = workbook['ESTADO GLOBAL']
     apply_styles_to_sheet(grafico_sheet, "FFAAAB", 110, 10, ('K','L','M'))
     add_chart(grafico_sheet)
-    grafico_planos = workbook['GRAPH 1']
-    apply_styles_to_sheet(grafico_planos, "CCC0DA", 2, 3)
+    grafico_planos = workbook['GRÁFICO CRÍTICOS']
+    apply_styles_to_sheet(grafico_planos, "FFFFAB", 2, 3)
     add_stacked_bar_chart_cal_pla(grafico_planos)
-    grafico_planos = workbook['GRAPH 1']
+    grafico_planos = workbook['GRÁFICO CRÍTICOS']
     add_stacked_bar_chart_planos(grafico_planos)
     # Guardar el archivo modificado
     workbook.save(archivo_excel)

@@ -134,6 +134,7 @@ df_cal_pla['Pendiente'] = sin_enviar
 # Reordenar columnas y filtrar por 'Sin_Enviar' > 0
 df_cal_pla = df_cal_pla.reindex(columns=['Nº Pedido', 'Enviados', 'Pendiente'])
 df_cal_pla = df_cal_pla[df_cal_pla['Pendiente'] > 0]
+print(df_cal_pla)
 
 # Leer la hoja "DATA" usando pandas para análisis
 df_planos = pd.read_excel(path_to_graphics)
@@ -158,6 +159,7 @@ df_planos['Pendiente'] = sin_enviar
 df_planos = df_planos.reindex(columns=['Nº Pedido', 'Enviados', 'Pendiente'])
 df_planos = df_planos[df_planos['Pendiente'] > 0]
 print(df_planos)
+print("Generando gráficos en la hoja de excel...")
 
 # Reorganizamos las columnas
 df = df.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
@@ -172,10 +174,10 @@ print("¡Generando columnas...!")
 output_path = f'./data/merged_data_{today_date_str}.xlsx'
 with pd.ExcelWriter(output_path, engine='xlsxwriter') as writer:
     # Escribir df_cal_pla en la hoja de cálculo
-    df_cal_pla.to_excel(writer, sheet_name='DATA', index=False)
+    df_cal_pla.to_excel(writer, sheet_name='ESTADO GLOBAL', index=False)
     # Obtener el objeto workbook y worksheet
     workbook = writer.book
-    worksheet = writer.sheets['DATA']
+    worksheet = writer.sheets['ESTADO GLOBAL']
     # Escribir df_planos a partir de la columna N
     startrow = 0
     startcol = 11  # Columna N es la columna 13 (índice 12 en 0-based indexing)
@@ -198,27 +200,27 @@ with pd.ExcelWriter(r'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monito
         highlight_row_content, value="Com. Menores", color='#FFE5AD', subset=["Estado", "Notas"], axis=1).apply(
         highlight_row_content, value="Com. Mayores", color='#DBB054', subset=["Estado", "Notas"], axis=1).apply(
         highlight_row_content, value="Comentado", color='#F79646', subset=["Estado", "Notas"], axis=1)
-    style_sheet.to_excel(writer, sheet_name='Documentación con comentarios', index=False) # Escribir el DataFrame con estilos en la hoja 'pending'
+    style_sheet.to_excel(writer, sheet_name='DOC. COMENTARIOS', index=False) # Escribir el DataFrame con estilos en la hoja 'pending'
     style_sheet_2 = df2.style.apply(highlight_row_content, value="Enviado", color='#B1E1B9', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_under_review'
-    style_sheet_2.to_excel(writer, sheet_name='Enviada para aprobación', index=False) # Escribir el DataFrame con estilos en la hoja 'df_under_review'
+    style_sheet_2.to_excel(writer, sheet_name='DOC. ENVIADA', index=False) # Escribir el DataFrame con estilos en la hoja 'df_under_review'
     style_sheet_3 = df3.style.apply(highlight_row_content, value='Sin Enviar', color='#FFFFAB', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_to_upload'
-    style_sheet_3.to_excel(writer, sheet_name='Documentación sin enviar', index=False) # Escribir el DataFrame con estilos en la hoja 'to_upload'
+    style_sheet_3.to_excel(writer, sheet_name='DOC. SIN ENVIAR', index=False) # Escribir el DataFrame con estilos en la hoja 'to_upload'
     style_sheet_4 = df4.style.apply(highlight_row_content, value='Sin Enviar', color='#FFFFAB', subset=["Estado"], axis=1).apply(highlight_row_content, value=" ", color='#FFFFAB', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_to_upload'
     style_sheet_4.to_excel(writer, sheet_name='CRÍTICOS', index=False) # Escribir el DataFrame con estilos en la hoja 'to_upload'
-    df_graph_merge.to_excel(writer, sheet_name='GRAPH 1', index=False)
-    df5.to_excel(writer, sheet_name='DATA', index=False) # Escribir el DataFrame con estilos en la hoja 'pending'
+    df_graph_merge.to_excel(writer, sheet_name='GRÁFICO CRÍTICOS', index=False)
+    df5.to_excel(writer, sheet_name='ESTADO GLOBAL', index=False) # Escribir el DataFrame con estilos en la hoja 'pending'
 print("¡Estilo, formato y color aplicado correctamente a todas las hojas del excel!")
 
 
 # Cargar archivo de Excel con las tres hojas de datos
 wb = Workbook('C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data\\monitoring_report_' + today_date_str + '.xlsx')
 # Obtener la referencia de las hojas/sheets de trabajo deseadas
-sheets = {"Documentación con comentarios": wb.getWorksheets().get("Documentación con comentarios"),
-          "Enviada para aprobación": wb.getWorksheets().get("Enviada para aprobación"),
-          "Documentación sin enviar": wb.getWorksheets().get("Documentación sin enviar"),
+sheets = {"DOC. COMENTARIOS": wb.getWorksheets().get("DOC. COMENTARIOS"),
+          "DOC. ENVIADA": wb.getWorksheets().get("DOC. ENVIADA"),
+          "DOC. SIN ENVIAR": wb.getWorksheets().get("DOC. SIN ENVIAR"),
           "CRÍTICOS": wb.getWorksheets().get("CRÍTICOS"),
-          "GRAPH 1": wb.getWorksheets().get("GRAPH 1"),
-          "DATA":wb.getWorksheets().get("DATA")}
+          "GRÁFICO CRÍTICOS": wb.getWorksheets().get("GRÁFICO CRÍTICOS"),
+          "ESTADO GLOBAL":wb.getWorksheets().get("ESTADO GLOBAL")}
 
 # Ajuste automático de todas las columnas en cada hoja
 for sheet_name, sheet in sheets.items():
