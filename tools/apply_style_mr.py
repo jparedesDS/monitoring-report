@@ -148,7 +148,7 @@ def apply_excel_styles(today_date):
     def add_stacked_bar_chart_cal_pla(sheet):
         chart = BarChart()
         chart.type = "col"
-        chart.title = "Estado Doc. Cálculos y Planos"
+        chart.title = "Estado Doc. Cálculos y Planos (ESP-0003)"
         chart.style = 10
         chart.y_axis.title = 'DOCUMENTOS'
         chart.x_axis.title = 'Nº DE PEDIDO'
@@ -190,8 +190,8 @@ def apply_excel_styles(today_date):
         chart.dataLabels.showVal = True
 
         # Posicionar y escalar el gráfico
-        sheet.add_chart(chart, "D1")
-        chart.width = 17
+        sheet.add_chart(chart, "E1")
+        chart.width = 15
         chart.height = 10
 
         for col in ['K', 'L']:
@@ -201,7 +201,7 @@ def apply_excel_styles(today_date):
     def add_stacked_bar_chart_planos(sheet):
         chart = BarChart()
         chart.type = "col"
-        chart.title = "Estado Doc. Planos"
+        chart.title = "Estado Doc. Planos (PLG-0005)"
         chart.style = 10
         chart.y_axis.title = 'DOCUMENTOS'
         chart.x_axis.title = 'Nº DE PEDIDO'
@@ -243,14 +243,14 @@ def apply_excel_styles(today_date):
         chart.dataLabels.showVal = True
 
         # Posicionar y escalar el gráfico
-        sheet.add_chart(chart, "O1")
-        chart.width = 17
+        sheet.add_chart(chart, "P1")
+        chart.width = 15
         chart.height = 10
 
         # Iterar a través de cada columna y fila para aplicar los cambios
         start_row = 1
         end_row = 10
-        for col in ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',]:
+        for col in ['E', 'F', 'G', 'H', 'I', 'J', 'K',]:
             for row in range(start_row, end_row + 1):
                 cell = sheet[f'{col}{row}']
                 cell.fill = PatternFill(fill_type=None)  # Eliminar el relleno

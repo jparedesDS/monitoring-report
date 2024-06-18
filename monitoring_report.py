@@ -118,12 +118,18 @@ df_cal_pla = pd.read_excel(path_to_graphics)
 df_cal_pla = df_cal_pla[df_cal_pla['Tipo Doc.'] == 'Cálculo y plano']
 # Rellenar valores nulos en 'Estado' con 'Sin Enviar'
 df_cal_pla['Estado'] = df_cal_pla['Estado'].fillna('Sin Enviar')
+# Reemplazar NaN en 'Nº Doc. Cliente' con 'Sin TR. Number'
+df_cal_pla['Nº Doc. Cliente'] = df_cal_pla['Nº Doc. Cliente'].fillna('Sin TR. Number')
+# Concatenar 'Nº Doc. Cliente' en caso de duplicados por 'Nº Pedido'
+df_cal_pla['Nº Doc. Cliente'] = df_cal_pla.groupby('Nº Pedido')['Nº Doc. Cliente'].transform(lambda x: ';'.join(x.astype(str).unique()))
+# Eliminar duplicados manteniendo solo la primera ocurrencia de cada 'Nº Pedido'
+df_cal_pla = df_cal_pla.drop_duplicates(subset=['Nº Pedido', 'Estado'])
 # Contar la frecuencia de cada estado por 'Nº Pedido'
-df_cal_pla = df_cal_pla.groupby(['Nº Pedido', 'Estado']).size().unstack(fill_value=0).reset_index()
+df_cal_pla = df_cal_pla.groupby(['Nº Pedido', 'Nº Doc. Cliente', 'Estado']).size().unstack(fill_value=0).reset_index()
 # Calcular el total y el porcentaje completado
-df_cal_pla['Total'] = df_cal_pla.iloc[:, 1:].sum(axis=1)
+df_cal_pla['Total'] = df_cal_pla.iloc[:, 2:].sum(axis=1)
 suma_total = df_cal_pla['Total']
-suma_total_general = df_cal_pla['Aprobado']
+suma_total_general = df_cal_pla.get('Aprobado', 0)
 porcentaje_total = (suma_total_general / suma_total) * 100
 df_cal_pla['% Completado'] = porcentaje_total
 # Calcular 'Aprobados' y 'Sin_Enviar' usando get para evitar errores si las columnas no existen
@@ -132,7 +138,7 @@ sin_enviar = df_cal_pla.get('Com. Menores', 0) + df_cal_pla.get('Sin Enviar', 0)
 df_cal_pla['Enviados'] = aprobados
 df_cal_pla['Pendiente'] = sin_enviar
 # Reordenar columnas y filtrar por 'Sin_Enviar' > 0
-df_cal_pla = df_cal_pla.reindex(columns=['Nº Pedido', 'Enviados', 'Pendiente'])
+df_cal_pla = df_cal_pla[['Nº Pedido', 'Enviados', 'Pendiente', 'Nº Doc. Cliente']]
 df_cal_pla = df_cal_pla[df_cal_pla['Pendiente'] > 0]
 print(df_cal_pla)
 
@@ -142,12 +148,18 @@ df_planos = pd.read_excel(path_to_graphics)
 df_planos = df_planos[df_planos['Tipo Doc.'] == 'Planos']
 # Rellenar valores nulos en 'Estado' con 'Sin Enviar'
 df_planos['Estado'] = df_planos['Estado'].fillna('Sin Enviar')
+# Reemplazar NaN en 'Nº Doc. Cliente' con 'Sin TR. Number'
+df_planos['Nº Doc. Cliente'] = df_planos['Nº Doc. Cliente'].fillna('Sin TR. Number')
+# Concatenar 'Nº Doc. Cliente' en caso de duplicados por 'Nº Pedido'
+df_planos['Nº Doc. Cliente'] = df_planos.groupby('Nº Pedido')['Nº Doc. Cliente'].transform(lambda x: ';'.join(x.astype(str).unique()))
+# Eliminar duplicados manteniendo solo la primera ocurrencia de cada 'Nº Pedido'
+df_planos = df_planos.drop_duplicates(subset=['Nº Pedido', 'Estado'])
 # Contar la frecuencia de cada estado por 'Nº Pedido'
-df_planos = df_planos.groupby(['Nº Pedido', 'Estado']).size().unstack(fill_value=0).reset_index()
+df_planos = df_planos.groupby(['Nº Pedido', 'Nº Doc. Cliente', 'Estado']).size().unstack(fill_value=0).reset_index()
 # Calcular el total y el porcentaje completado
-df_planos['Total'] = df_planos.iloc[:, 1:].sum(axis=1)
+df_planos['Total'] = df_planos.iloc[:, 2:].sum(axis=1)
 suma_total = df_planos['Total']
-suma_total_general = df_planos['Aprobado']
+suma_total_general = df_planos.get('Aprobado', 0)
 porcentaje_total = (suma_total_general / suma_total) * 100
 df_planos['% Completado'] = porcentaje_total
 # Calcular 'Aprobados' y 'Sin_Enviar' usando get para evitar errores si las columnas no existen
@@ -156,7 +168,7 @@ sin_enviar = df_planos.get('Com. Menores', 0) + df_planos.get('Sin Enviar', 0) +
 df_planos['Enviados'] = aprobados
 df_planos['Pendiente'] = sin_enviar
 # Reordenar columnas y filtrar por 'Sin_Enviar' > 0
-df_planos = df_planos.reindex(columns=['Nº Pedido', 'Enviados', 'Pendiente'])
+df_planos = df_planos[['Nº Pedido', 'Enviados', 'Pendiente', 'Nº Doc. Cliente']]
 df_planos = df_planos[df_planos['Pendiente'] > 0]
 print(df_planos)
 print("Generando gráficos en la hoja de excel...")
