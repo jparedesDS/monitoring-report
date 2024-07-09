@@ -110,7 +110,7 @@ def apply_excel_styles(today_date):
     def add_chart(sheet):
         chart = BarChart()
         chart.type = "col"  # Configurar el gráfico como gráfico de columnas
-        chart.title = "Estado de la Documentación"
+        chart.title = "Estado de la Documentación (PENDIENTES)"
         chart.y_axis.title = 'PORCENTAJE COMPLETADO'
         chart.x_axis.title = 'Nº DE PEDIDOS'
         chart.style = 10
@@ -264,6 +264,7 @@ def apply_excel_styles(today_date):
     apply_styles_to_sheet(workbook['DOC. SIN ENVIAR'], "DDDDDD", 200, 13, ('K'))
     apply_styles_to_sheet(workbook['CRÍTICOS'], "FFFF46", 200, 13, ('K'))
     grafico_sheet = workbook['ESTADO GLOBAL']
+    apply_styles_to_sheet(workbook['DOC. TOTAL'], "99CCFF", 500, 18, ('K'))
     apply_styles_to_sheet(grafico_sheet, "FFAAAB", 110, 10, ('K','L','M'))
     add_chart(grafico_sheet)
     grafico_planos = workbook['GRÁFICO CRÍTICOS']

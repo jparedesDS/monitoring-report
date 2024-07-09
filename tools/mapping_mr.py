@@ -30,7 +30,7 @@ def identificar_cliente_por_PO(df):
                'BP-T2': 'CNTCC', 'EP24I': 'ALMARAZ TRILLO',
                '49000': 'REPSOL LA PAMPILLA', 'PO 15': 'ASTCOR',
                'Q3710': 'INTECSA INDUSTRIAL', 'RFQ 1': 'BU HASA',
-               '30012': 'TEN-BP OIL'}
+               '30012': 'TEN-BP OIL', '70292': 'LECTA'}
 
     # Definir la expresión regular para extraer los primeros 5 dígitos del número de pedido (PO)
     df['Cliente'] = df['Nº PO'].apply(str)
@@ -106,7 +106,7 @@ def apply_responsable(df):
                    'P-24/028': "AC", 'P-24/029': "AC", 'P-24/030': "AC", 'P-24/031': "AC",
                    'P-24/032': "AC", 'P-24/033': "AC", 'P-24/034': "AC", 'P-24/035': "AC",
                    'P-24/036': "AC", 'P-24/037': "AC", 'P-24/038': "AC", 'P-24/039': "AC",
-                   'P-24/040': "LB", 'P-24/041': "AC", 'P-24/042': "AC", 'P-24/043': "AC",
+                   'P-24/040': "LB", 'P-24/041': "SS", 'P-24/042': "SS", 'P-24/043': "AC",
                    'P-24/044': "AC", 'P-24/045': "AC", 'P-24/046': "AC", 'P-24/047': "AC",
                    'P-24/048': "AC", 'P-24/049': "AC", 'P-24/050': "AC", 'P-24/051': "AC",
                    'P-24/052': "AC", 'P-24/053': "AC", 'P-24/054': "AC", 'P-24/055': "AC"}

@@ -23,6 +23,7 @@ df = pd.read_excel(path_pending)
 df2 = pd.read_excel(path_under_review)
 df3 = pd.read_excel(path_to_upload)
 df5 = pd.read_excel(path_to_graphics)
+df6 = pd.read_excel(path_to_graphics)
 
 # TRATAMIENTO DEL DATAFRAME "PENDING / df"
 today_date = pd.to_datetime('today', format='%d-%m-%Y', dayfirst=True)  # Capturamos la fecha actual del día
@@ -119,6 +120,32 @@ df5 = df5.reindex(columns=['Nº Pedido', '% Completado', 'Aprobado', 'Com. Mayor
 print(df5)
 print("Generando porcentaje total de los pedidos...")
 
+# TRATAMIENTO DEL DATAFRAME "GRÁFICOS / df6"
+df6['Fecha'] = pd.to_datetime(df6['Fecha'], format="%d-%m-%Y", dayfirst=True)
+df6['Fecha Pedido'] = pd.to_datetime(df6['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
+df6['Fecha Prevista'] = pd.to_datetime(df6['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
+df6['Estado'] = df6['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
+# Eliminar la columna 'Eliminado' si existe
+df6 = df6[df6['Estado'] != 'Eliminado']
+df6 = df6[df6['Estado'] != 'Aprobado']
+df6.insert(14, "Días Devolución", (today_date - df6['Fecha']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
+# Añadimos la columna 'Fecha Contractual' dividida en semanas
+df6.insert(15, 'Fecha Contractual', ((df6['Fecha Prevista'] - df6['Fecha Pedido']).dt.days // 7))
+df6['Fecha Contractual'] = "Aprobación + " + df6['Fecha Contractual'].astype(str) + ' Semanas'
+df6.insert(16, "Fecha AP VDDL", df6['Nº Pedido']) # Insertamos la columna 'Fecha AP VDDL'
+process_vddl(df6) # Aplicar el mapeo para cambiar el tipo de estado en la columna 'Fecha AP VDDL'
+apply_responsable(df6)
+identificar_cliente_por_PO(df6) # Aplicar el mapping para cambiar el tipo de 'Cliente'
+# Insertamos la columna 'Días VDDL'
+df6['Fecha AP VDDL'] = pd.to_datetime(df6['Fecha AP VDDL'], format="mixed", dayfirst=True)
+df6.insert(17, "Días VDDL", (today_date - df6['Fecha AP VDDL']).dt.days)
+# Transformamos todas las fechas al formato 'DIA-MES-AÑO' sin la hora
+df6['Fecha'] = df6['Fecha'].dt.date
+df6['Fecha Prevista'] = df6['Fecha Prevista'].dt.date
+df6['Fecha Pedido'] = df6['Fecha Pedido'].dt.date
+df6['Fecha AP VDDL'] = df6['Fecha AP VDDL'].dt.date
+print(df6)
+
 # Leer la hoja "DATA" usando pandas para análisis
 df_cal_pla = pd.read_excel(path_to_graphics)
 # Filtrar por 'Tipo Doc.'
@@ -185,6 +212,7 @@ df = df.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 
 df2 = df2.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista',  'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
 df3 = critics_no.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
 df4 = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
+df6 = df6.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista',  'Fecha Contractual', 'Historial Rev.', 'Seguimiento'])
 df_cal_pla.to_excel('.\\data\\df_cal_pla_' + str(today_date_str) + '.xlsx', index=False)
 df_planos.to_excel('.\\data\\df_planos_' + str(today_date_str) + '.xlsx', index=False)
 print("¡Generando columnas...!")
@@ -214,6 +242,15 @@ df_graph_merge = pd.read_excel(graph_merge)
 # Seleccionamos las columnas que van a ser coloreadas según el 'ESTADO' que tiene la documentación
 with pd.ExcelWriter(r'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data\\monitoring_report_' + str(today_date_str) + '.xlsx', engine='xlsxwriter') as writer:
     # Aplicar estilos a cada hoja de excel
+    style_sheet6 = df6.style.apply(
+        highlight_row_content, value="Rechazado", color='#FFA19A', subset=["Estado"], axis=1).apply(
+        highlight_row_content, value="Com. Menores", color='#FFE5AD', subset=["Estado"], axis=1).apply(
+        highlight_row_content, value="Com. Mayores", color='#DBB054', subset=["Estado"], axis=1).apply(
+        highlight_row_content, value="Comentado", color='#F79646', subset=["Estado"], axis=1).apply(
+        highlight_row_content, value="Enviado", color='#B1E1B9', subset=["Estado"], axis=1).apply(
+        highlight_row_content, value="Sin Enviar", color='#FFFFAB', subset=["Estado"], axis=1).apply(
+        highlight_row_content, value="Aprobado", color='#D4DCF4', subset=["Estado"], axis=1)
+    style_sheet6.to_excel(writer, sheet_name='DOC. TOTAL',index=False)  # Escribir el DataFrame con estilos en la hoja 'pending'
     style_sheet = df.style.apply(
         highlight_row_content, value="Rechazado", color='#FFA19A', subset=["Estado", "Notas"], axis=1).apply(
         highlight_row_content, value="Com. Menores", color='#FFE5AD', subset=["Estado", "Notas"], axis=1).apply(
@@ -234,7 +271,8 @@ print("¡Estilo, formato y color aplicado correctamente a todas las hojas del ex
 # Cargar archivo de Excel con las tres hojas de datos
 wb = Workbook('C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data\\monitoring_report_' + today_date_str + '.xlsx')
 # Obtener la referencia de las hojas/sheets de trabajo deseadas
-sheets = {"DOC. COMENTARIOS": wb.getWorksheets().get("DOC. COMENTARIOS"),
+sheets = {"DOC. TOTAL": wb.getWorksheets().get("DOC. TOTAL"),
+          "DOC. COMENTARIOS": wb.getWorksheets().get("DOC. COMENTARIOS"),
           "DOC. ENVIADA": wb.getWorksheets().get("DOC. ENVIADA"),
           "DOC. SIN ENVIAR": wb.getWorksheets().get("DOC. SIN ENVIAR"),
           "CRÍTICOS": wb.getWorksheets().get("CRÍTICOS"),
