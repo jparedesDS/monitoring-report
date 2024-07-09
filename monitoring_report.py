@@ -103,12 +103,19 @@ df5['Estado'] = df5['Estado'].fillna('Sin Enviar') # Completamos la columna 'Est
 df5 = df5.groupby(['Nº Pedido', 'Estado']).size().unstack(fill_value=0).reset_index()
 # Eliminar la columna 'Eliminado' si existe
 df5 = df5.drop(columns=['Eliminado'])
+# Lista de columnas necesarias
+columnas_necesarias = ['Aprobado', 'Com. Mayores', 'Com. Menores', 'Enviado', 'Rechazado', 'Sin Enviar']
+# Asegurarnos de que cada columna necesaria existe y añadirla con 0 si no existe
+for columna in columnas_necesarias:
+    if columna not in df5.columns:
+        df5[columna] = 0
 df5['Total'] = df5.iloc[:, 1:8].sum(axis=1)
 suma_total = df5['Total']
 suma_total_general = df5['Aprobado']
 # Calcular el porcentaje total
 porcentaje_total = (suma_total_general / suma_total) * 100
 df5['% Completado'] = porcentaje_total
+df5 = df5.reindex(columns=['Nº Pedido', '% Completado', 'Aprobado', 'Com. Mayores', 'Com. Menores', 'Enviado', 'Rechazado', 'Sin Enviar', 'Total'])
 print(df5)
 print("Generando porcentaje total de los pedidos...")
 

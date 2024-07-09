@@ -86,7 +86,7 @@ def apply_excel_styles(today_date):
                 for cell in row:
                     cell.font = font_black
 
-        for fila in sheet.iter_rows(min_row=1, max_row=max_row, min_col=1, max_col=max_col):
+        for fila in sheet.iter_rows(min_row=1, max_row=500, min_col=1, max_col=max_col):
             for celda in fila:
                 if celda.value == 'Sí':
                     celda.font = Font(color='FF5B5B', bold=True)
@@ -119,7 +119,7 @@ def apply_excel_styles(today_date):
         filtered_categories = []
         filtered_data = []
         for row in range(2, sheet.max_row + 1):  # Asumiendo que la primera fila tiene encabezados
-            porcentaje_completado = sheet.cell(row=row, column=9).value
+            porcentaje_completado = sheet.cell(row=row, column=2).value
             if porcentaje_completado is not None and porcentaje_completado < 100:
                 pedido = sheet.cell(row=row, column=1).value
                 filtered_categories.append(pedido)
@@ -194,7 +194,7 @@ def apply_excel_styles(today_date):
         chart.width = 15
         chart.height = 10
 
-        for col in ['K', 'L']:
+        for col in ['K', 'L', 'J']:
             cell = sheet[f'{col}1']
             cell.fill = PatternFill(fill_type=None)
 
