@@ -142,10 +142,12 @@ df5 = df5.reindex(columns=['Nº Pedido', '% Completado', 'Aprobado', 'Com. Mayor
 # Ordenar los datos por una columna específica en orden descendente (de Z a A)
 columna_para_ordenar = 'Nº Pedido'  # Reemplaza con el nombre de tu columna
 df5 = df5.sort_values(by=columna_para_ordenar, ascending=False)
+df5['% Completado'] = df5['% Completado'].fillna(0) # Completamos la columna '% Completado' con '0'
+df5 = df5[df5['% Completado'] != 100]
 print(df5)
 print("Generando porcentaje total de los pedidos...")
 
-# TRATAMIENTO DEL DATAFRAME "GRÁFICOS / df6"
+# TRATAMIENTO DEL DATAFRAME "TODOS LOS DOCUMENTOS"
 df6['Fecha'] = pd.to_datetime(df6['Fecha'], format="%d-%m-%Y", dayfirst=True)
 df6['Fecha Pedido'] = pd.to_datetime(df6['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
 df6['Fecha Prevista'] = pd.to_datetime(df6['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
@@ -190,24 +192,24 @@ with pd.ExcelWriter(r'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monito
         highlight_row_content, value="Enviado", color='#B1E1B9', subset=["Estado"], axis=1).apply(
         highlight_row_content, value="Sin Enviar", color='#FFFFAB', subset=["Estado"], axis=1).apply(
         highlight_row_content, value="Aprobado", color='#D4DCF4', subset=["Estado"], axis=1)
-    style_sheet6.to_excel(writer, sheet_name='ALL DOC.',index=False)  # Escribir el DataFrame con estilos en la hoja 'pending'
+    style_sheet6.to_excel(writer, sheet_name='ALL DOC.',index=False)  # Grabar el DataFrame con estilos en la hoja 'pending'
     style_sheet_2 = df2.style.apply(highlight_row_content, value="Enviado", color='#B1E1B9', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_under_review'
-    style_sheet_2.to_excel(writer, sheet_name='ENVIADOS', index=False) # Escribir el DataFrame con estilos en la hoja 'df_under_review'
+    style_sheet_2.to_excel(writer, sheet_name='ENVIADOS', index=False) # Grabar el DataFrame con estilos en la hoja 'df_under_review'
     style_sheet_3 = df3.style.apply(highlight_row_content, value='Sin Enviar', color='#FFFFAB', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_to_upload'
-    style_sheet_3.to_excel(writer, sheet_name='SIN ENVIAR', index=False) # Escribir el DataFrame con estilos en la hoja 'to_upload'
+    style_sheet_3.to_excel(writer, sheet_name='SIN ENVIAR', index=False) # Grabar el DataFrame con estilos en la hoja 'to_upload'
     style_sheet = df.style.apply(
         highlight_row_content, value="Rechazado", color='#FFA19A', subset=["Estado", "Notas"], axis=1).apply(
         highlight_row_content, value="Com. Menores", color='#FFE5AD', subset=["Estado", "Notas"], axis=1).apply(
         highlight_row_content, value="Com. Mayores", color='#DBB054', subset=["Estado", "Notas"], axis=1).apply(
         highlight_row_content, value="Comentado", color='#F79646', subset=["Estado", "Notas"], axis=1)
-    style_sheet.to_excel(writer, sheet_name='COMENTADOS', index=False) # Escribir el DataFrame con estilos en la hoja 'pending'
+    style_sheet.to_excel(writer, sheet_name='COMENTADOS', index=False) # Grabar el DataFrame con estilos en la hoja 'pending'
     style_sheet_4 = df4.style.apply(highlight_row_content, value="Rechazado", color='#FFA19A', subset=["Estado"], axis=1).apply(
         highlight_row_content, value="Com. Menores", color='#FFE5AD', subset=["Estado"], axis=1).apply(
         highlight_row_content, value="Com. Mayores", color='#DBB054', subset=["Estado"], axis=1).apply(
         highlight_row_content, value="Comentado", color='#F79646', subset=["Estado"], axis=1).apply(
         highlight_row_content, value="Sin Enviar", color='#FFFFAB', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_to_upload'
-    style_sheet_4.to_excel(writer, sheet_name='CRÍTICOS', index=False) # Escribir el DataFrame con estilos en la hoja 'to_upload'
-    df5.to_excel(writer, sheet_name='STATUS GLOBAL', index=False) # Escribir el DataFrame con estilos en la hoja 'pending'
+    style_sheet_4.to_excel(writer, sheet_name='CRÍTICOS', index=False) # Grabar el DataFrame con estilos en la hoja 'to_upload'
+    df5.to_excel(writer, sheet_name='STATUS GLOBAL', index=False) # Grabar el DataFrame con estilos en la hoja 'pending'
 print("¡Estilo, formato y color aplicado correctamente a todas las hojas del excel!")
 
 # Cargar archivo de Excel con las tres hojas de datos

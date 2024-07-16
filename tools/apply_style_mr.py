@@ -91,6 +91,8 @@ def apply_excel_styles(today_date):
                     celda.font = Font(color='7030A0', bold=True)
                 if celda.value == 'SS':
                     celda.font = Font(color='FF5B5B', bold=True)
+                if celda.value == 'CCH':
+                    celda.font = Font(color='545454', bold=True)
                 if celda.value == 100:
                     celda.font = Font(color='FF5B5B', bold=True)
         # Autofiltro de columnas
@@ -101,7 +103,7 @@ def apply_excel_styles(today_date):
     def add_chart(sheet):
         chart = BarChart()
         chart.type = "col"  # Configurar el gráfico como gráfico de columnas
-        chart.title = "Estado de la Documentación (Pendientes)"
+        chart.title = "Estado de la Documentación"
         chart.y_axis.title = 'PORCENTAJE COMPLETADO'
         chart.x_axis.title = 'Nº DE PEDIDOS'
         chart.style = 10
@@ -116,18 +118,24 @@ def apply_excel_styles(today_date):
                 filtered_categories.append(pedido)
                 filtered_data.append(porcentaje_completado)
 
-        # Escribimos las categorías y datos filtrados en columnas temporales al final de la hoja
+        """# Escribimos las categorías y datos filtrados en columnas temporales al final de la hoja
         start_col = sheet.max_column + 20
         for idx, value in enumerate(filtered_categories, start=2):
             sheet.cell(row=idx, column=start_col, value=value)
         for idx, value in enumerate(filtered_data, start=2):
-            sheet.cell(row=idx, column=start_col + 1, value=value)
+            sheet.cell(row=idx, column=start_col + 1, value=value)"""
 
-        data = Reference(sheet, min_col=start_col + 1, min_row=1, max_row=len(filtered_data) + 1)
-        categories = Reference(sheet, min_col=start_col, min_row=2, max_row=len(filtered_categories) + 1)
+        data = Reference(sheet, min_col=2, min_row=1, max_row=sheet.max_row - 470)
+        categories = Reference(sheet, min_col=1, min_row=2, max_row=sheet.max_row - 470)
         chart.add_data(data, titles_from_data=True)
         chart.set_categories(categories)
         chart.smooth = True
+
+        # Configurar etiquetas de datos
+        chart.dataLabels = DataLabelList()
+        chart.dataLabels.showVal = True
+        chart.dataLabels.position = 'outEnd'
+
         # Posicionar y escalar el gráfico
         sheet.add_chart(chart, "L2")
         chart.width = 27  # Ancho del gráfico en pulgadas
