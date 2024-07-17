@@ -3,8 +3,9 @@ from openpyxl import load_workbook
 from openpyxl.chart.label import DataLabelList
 from openpyxl.styles import NamedStyle, PatternFill, Border, Side, Font
 from openpyxl.chart import BarChart, Reference
+from openpyxl.styles.builtins import styles
 from openpyxl.styles.differential import DifferentialStyle
-from openpyxl.formatting.rule import Rule
+from openpyxl.formatting.rule import Rule, DataBar, FormatObject, ColorScaleRule, DataBarRule
 from datetime import datetime
 
 # Función aplicable para el tratamiento y coloreado de datos en la tabla de excel
@@ -81,7 +82,7 @@ def apply_excel_styles(today_date):
                 for cell in row:
                     cell.font = font_black
 
-        for fila in sheet.iter_rows(min_row=1, max_row=500, min_col=1, max_col=max_col):
+        for fila in sheet.iter_rows(min_row=1, max_row=sheet.max_row, min_col=1, max_col=max_col):
             for celda in fila:
                 if celda.value == 'Sí':
                     celda.font = Font(color='FF5B5B', bold=True)
@@ -103,7 +104,7 @@ def apply_excel_styles(today_date):
     def add_chart(sheet):
         chart = BarChart()
         chart.type = "col"  # Configurar el gráfico como gráfico de columnas
-        chart.title = "Estado de la Documentación"
+        chart.title = "Estado de la Documentación (Pendiente)"
         chart.y_axis.title = 'PORCENTAJE COMPLETADO'
         chart.x_axis.title = 'Nº DE PEDIDOS'
         chart.style = 10
@@ -118,15 +119,8 @@ def apply_excel_styles(today_date):
                 filtered_categories.append(pedido)
                 filtered_data.append(porcentaje_completado)
 
-        """# Escribimos las categorías y datos filtrados en columnas temporales al final de la hoja
-        start_col = sheet.max_column + 20
-        for idx, value in enumerate(filtered_categories, start=2):
-            sheet.cell(row=idx, column=start_col, value=value)
-        for idx, value in enumerate(filtered_data, start=2):
-            sheet.cell(row=idx, column=start_col + 1, value=value)"""
-
-        data = Reference(sheet, min_col=2, min_row=1, max_row=sheet.max_row - 470)
-        categories = Reference(sheet, min_col=1, min_row=2, max_row=sheet.max_row - 470)
+        data = Reference(sheet, min_col=2, min_row=1, max_row=sheet.max_row)
+        categories = Reference(sheet, min_col=1, min_row=2, max_row=sheet.max_row)
         chart.add_data(data, titles_from_data=True)
         chart.set_categories(categories)
         chart.smooth = True
@@ -154,7 +148,13 @@ def apply_excel_styles(today_date):
     grafico_sheet = workbook['STATUS GLOBAL']
     apply_styles_to_sheet(grafico_sheet, "FFAAAB", 110, 10, ('K','L','M'))
     add_chart(grafico_sheet)
+    # Aplicar formato condicional de barra de datos a la columna '% Completado'
+    min_row_databar = 2  # Suponiendo que los encabezados están en la primera fila
+    max_row_databar = grafico_sheet.max_row
+    # Definir DataBarRule para 'STATUS GLOBAL'
+    rule = DataBarRule(start_type="percentile", start_value=0, end_type="percentile",
+                           end_value=100, color="FF5B5B", showValue="None", minLength=None, maxLength=None)
+    grafico_sheet.conditional_formatting.add(f"B{min_row_databar}:H{max_row_databar}", rule)
     # Guardar el archivo modificado
     workbook.save(archivo_excel)
     print("¡Creando los filtros de las columnas!")
-
