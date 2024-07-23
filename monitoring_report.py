@@ -95,7 +95,6 @@ identificar_cliente_por_PO(df3) # Aplicar el mapping para cambiar el tipo de 'Cl
 df3['Fecha'] = df3['Fecha'].dt.date
 df3['Fecha Prevista'] = df3['Fecha Prevista'].dt.date
 df3['Fecha Pedido'] = df3['Fecha Pedido'].dt.date
-critics_no = df3[df3['Crítico'] == 'No'] # Filtrar los documentos que tienen 'No' en la columna 'Crítico'
 print(df3)
 
 # TRATAMIENTO DEL DATAFRAME "CRÍTICOS"
@@ -143,7 +142,8 @@ df5 = df5.reindex(columns=['Nº Pedido', '% Completado', 'Aprobado', 'Com. Mayor
 columna_para_ordenar = 'Nº Pedido'  # Reemplaza con el nombre de tu columna
 df5 = df5.sort_values(by=columna_para_ordenar, ascending=False)
 df5['% Completado'] = df5['% Completado'].fillna(0) # Completamos la columna '% Completado' con '0'
-df5 = df5[df5['% Completado'] != 100]
+df5 = df5[df5['% Completado'] != 100] # Eliminamos los pedidos que se encuentren 100% completos
+df5 = df5.round(2) # Que muestre máximo 2 decimales
 print(df5)
 print("Generando porcentaje total de los pedidos...")
 
@@ -176,7 +176,7 @@ print(df6)
 # Reorganizamos las columnas
 df = df.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
 df2 = df2.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista',  'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
-df3 = critics_no.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
+df3 = df3.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
 df4 = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
 df6 = df6.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista',  'Fecha Contractual', 'Historial Rev.', 'Seguimiento'])
 print("¡Generando columnas...!")
