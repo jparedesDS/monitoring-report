@@ -97,7 +97,7 @@ def apply_excel_styles(today_date):
                 if celda.value == 100:
                     celda.font = Font(color='FF5B5B', bold=True)
         # Autofiltro de columnas
-        sheet.auto_filter.ref = f"A1:{chr(65 + max_col - 1)}{max_row}"
+        sheet.auto_filter.ref = f"A1:{chr(66 + max_col)}{max_row}"
         # Definir el estilo condicional para días de devolución >= 15
         sheet.conditional_formatting.add(f"O2:O{max_row}", rule_devolucion)
 
@@ -152,9 +152,9 @@ def apply_excel_styles(today_date):
     min_row_databar = 2  # Suponiendo que los encabezados están en la primera fila
     max_row_databar = grafico_sheet.max_row
     # Definir DataBarRule para 'STATUS GLOBAL'
-    rule = DataBarRule(start_type="percentile", start_value=0, end_type="percentile",
+    rule_databar = DataBarRule(start_type="percentile", start_value=0, end_type="percentile",
                            end_value=100, color="FF5B5B", showValue="None", minLength=None, maxLength=None)
-    grafico_sheet.conditional_formatting.add(f"B{min_row_databar}:H{max_row_databar}", rule)
+    grafico_sheet.conditional_formatting.add(f"B{min_row_databar}:H{max_row_databar}", rule_databar)
     # Guardar el archivo modificado
     workbook.save(archivo_excel)
     print("¡Creando los filtros de las columnas!")

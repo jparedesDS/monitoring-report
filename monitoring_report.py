@@ -85,10 +85,10 @@ df3['Fecha'] = pd.to_datetime(df3['Fecha'], format="%d-%m-%Y", dayfirst=True)
 df3['Fecha Pedido'] = pd.to_datetime(df3['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
 df3['Fecha Prevista'] = pd.to_datetime(df3['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
 df3['Estado'] = df3['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
-df3.insert(14, "Días Devolución", (today_date - df3['Fecha']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
 # Añadimos la columna 'Fecha Contractual'
-df3.insert(15, 'Fecha Contractual', ((df3['Fecha Prevista'] - df3['Fecha Pedido']).dt.days // 7))
+df3.insert(14, 'Fecha Contractual', ((df3['Fecha Prevista'] - df3['Fecha Pedido']).dt.days // 7))
 df3['Fecha Contractual'] = "Aprobación + " + df3['Fecha Contractual'].astype(str) + ' Semanas'
+df3.insert(15, "Días Devolución", (today_date - df3['Fecha Pedido']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
 apply_responsable(df3)
 identificar_cliente_por_PO(df3) # Aplicar el mapping para cambiar el tipo de 'Cliente'
 # Transformamos todas las fechas al formato 'DIA-MES-AÑO' sin la hora
@@ -176,7 +176,7 @@ print(df6)
 # Reorganizamos las columnas
 df = df.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha', 'Días Devolución', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
 df2 = df2.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista',  'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
-df3 = df3.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
+df3 = df3.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Días Devolución'])
 df4 = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
 df6 = df6.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' ,'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista',  'Fecha Contractual', 'Historial Rev.', 'Seguimiento'])
 print("¡Generando columnas...!")
