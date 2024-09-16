@@ -23,15 +23,17 @@ def identificar_cliente_por_PO(df):
                '70215': 'CFE MERIDA', '70225': 'C.C. VALLADOLID',
                '70230': 'C.C. GONZALEZ ORTEGA', '70240': 'C.C. SAN LUIS',
                '80057': 'BU HASA', '80091': 'T.R. ENAP',
-               '19085': 'T.R. CEPSA', '30011': 'TECHNIP/BP OIL',
+               '19085': 'CEPSA/T.R.', '30011': 'BP OIL ESPAÑA',
                '75001': 'TECNIMONT', '60001': 'CEPSA WOOD',
-               '70112': 'CEPSA SAN ROQUE', '70801': 'CEPSA QUÍMICA PALOS',
+               '70112': 'CEPSA SAN ROQUE', '70801': 'AYESA/CEPSA',
                '15282': 'ASTCOR', 'T.206': 'REPSOL PETRÓLEO',
-               'BP-T2': 'CNTCC', 'EP24I': 'ALMARAZ TRILLO',
+               'BP-T2': 'CNTCC', 'EP24I': 'ALMARAZ/TRILLO',
                '49000': 'REPSOL LA PAMPILLA', 'PO 15': 'ASTCOR',
                'Q3710': 'INTECSA INDUSTRIAL', 'RFQ 1': 'BU HASA',
-               '30012': 'TEN-BP OIL', '70292': 'LECTA',
-               'APEIS': 'KNPC'}
+               '70292': 'LECTA', 'APEIS': 'KNPC',
+               '***': 'CEPSA/AYESA', '30012': 'BP OIL/WORLEY',
+               'EC24T': 'ALMARAZ/TRILLO', '10735': 'SULZER',
+               '70700': 'CEPSA/WOOD'}
 
     # Definir la expresión regular para extraer los primeros 5 dígitos del número de pedido (PO)
     df['Cliente'] = df['Nº PO'].apply(str)
@@ -110,7 +112,8 @@ def apply_responsable(df):
                    'P-24/040': "LB", 'P-24/041': "SS", 'P-24/042': "SS", 'P-24/043': "AC",
                    'P-24/044': "AC", 'P-24/045': "AC", 'P-24/046': "AC", 'P-24/047': "AC",
                    'P-24/048': "CCH", 'P-24/049': "AC", 'P-24/050': "AC", 'P-24/051': "AC",
-                   'P-24/052': "AC", 'P-24/053': "AC", 'P-24/054': "AC", 'P-24/055': "AC"}
+                   'P-24/052': "AC", 'P-24/053': "AC", 'P-24/054': "AC", 'P-24/055': "AC",
+                   'P-24/056': "AC", 'P-24/057': "AC", 'P-24/058': "AC", 'P-24/059': "AC",}
     # Extraemos
     df['Resp.'] = df['Nº Pedido']
 
