@@ -10,7 +10,9 @@ from asposecells.api import Workbook
 from openpyxl.reader.excel import load_workbook
 from tools.mapping_mr import *
 from tools.apply_style_mr import *
+import warnings
 
+warnings.filterwarnings('ignore')
 start_time = time.time()
 # Ruta del archivo excel con todos lo datos del ERP
 path_total = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\data_erp.xlsx'
