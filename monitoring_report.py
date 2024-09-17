@@ -19,8 +19,16 @@ path_total = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_rep
 erp_data = pd.read_excel(path_total)
 df_total = pd.read_excel(path_total)
 erp_data['Estado'] = erp_data['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
+df_total['Estado'] = df_total['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
+# Transformamos todas las columnas de fechas to_datetime
 today_date = pd.to_datetime('today', format='%d-%m-%Y', dayfirst=True)  # Capturamos la fecha actual del día
 today_date_str = today_date.strftime('%d-%m-%Y') # Formateamos la fecha_actual a strf para la lectura y guardado de archivos
+erp_data['Fecha'] = pd.to_datetime(erp_data['Fecha'], format="%d-%m-%Y", dayfirst=True)
+erp_data['Fecha Pedido'] = pd.to_datetime(erp_data['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
+erp_data['Fecha Prevista'] = pd.to_datetime(erp_data['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
+df_total['Fecha'] = pd.to_datetime(df_total['Fecha'], format="%d-%m-%Y", dayfirst=True)
+df_total['Fecha Pedido'] = pd.to_datetime(df_total['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
+df_total['Fecha Prevista'] = pd.to_datetime(df_total['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
 
 # Tratamiento del dataframe "Pending" // df_comentados
 df_menores = erp_data[erp_data['Estado'] == 'Com. Menores']
@@ -28,9 +36,6 @@ df_mayores = erp_data[erp_data['Estado'] == 'Com. Mayores']
 df_rechazado = erp_data[erp_data['Estado'] == 'Rechazado']
 df_comentados = pd.concat([df_menores, df_mayores, df_rechazado]) # Unimos los tres DataFrames
 # Transformamos todas las columnas de fechas to_datetime
-df_comentados['Fecha'] = pd.to_datetime(df_comentados['Fecha'], format="%d-%m-%Y", dayfirst=True)
-df_comentados['Fecha Pedido'] = pd.to_datetime(df_comentados['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
-df_comentados['Fecha Prevista'] = pd.to_datetime(df_comentados['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
 df_comentados.insert(12, "Notas", df_comentados['Estado']) # Insertar nueva columna 'Notas' en el dataframe
 df_comentados['Notas'] = df_comentados['Fecha'] # Añadimos en la columna 'Notas' la fecha del pedido
 # Sumar 15 días a la columna 'Notas' cuando la columna contiene 'Rechazado, Com. Menores, Com. Mayores, Comentado'
@@ -47,19 +52,10 @@ identificar_cliente_por_PO(df_comentados) # Aplicar el mapping para cambiar el t
 # Insertamos la columna 'Días VDDL'
 df_comentados['Fecha AP VDDL'] = pd.to_datetime(df_comentados['Fecha AP VDDL'], format="mixed", dayfirst=True)
 df_comentados.insert(17, "Días VDDL", (today_date - df_comentados['Fecha AP VDDL']).dt.days)
-# Transformamos todas las fechas
-df_comentados['Fecha'] = df_comentados['Fecha'].dt.date
-df_comentados['Fecha Prevista'] = df_comentados['Fecha Prevista'].dt.date
-df_comentados['Fecha Pedido'] = df_comentados['Fecha Pedido'].dt.date
-df_comentados['Fecha AP VDDL'] = df_comentados['Fecha AP VDDL'].dt.date
 print(df_comentados)
 
 # Tratamiento del dataframe "Under review" // df_envio
 df_envio = erp_data[erp_data['Estado'] == 'Enviado']
-# Transformamos todas las columnas de fechas to_datetime
-df_envio['Fecha'] = pd.to_datetime(df_envio['Fecha'], format="%d-%m-%Y", dayfirst=True)
-df_envio['Fecha Pedido'] = pd.to_datetime(df_envio['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
-df_envio['Fecha Prevista'] = pd.to_datetime(df_envio['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
 df_envio.insert(14, "Días Devolución", (today_date - df_envio['Fecha']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
 # Añadimos la columna 'Fecha Contractual' dividida en semanas
 df_envio.insert(15, 'Fecha Contractual', ((df_envio['Fecha Prevista'] - df_envio['Fecha Pedido']).dt.days // 7))
@@ -71,39 +67,20 @@ identificar_cliente_por_PO(df_envio) # Aplicar el mapping para cambiar el tipo d
 # Insertamos la columna 'Días VDDL'
 df_envio['Fecha AP VDDL'] = pd.to_datetime(df_envio['Fecha AP VDDL'], format="mixed", dayfirst=True)
 df_envio.insert(17, "Días VDDL", (today_date - df_envio['Fecha AP VDDL']).dt.days)
-# Transformamos todas las fechas al formato 'DIA-MES-AÑO' sin la hora
-df_envio['Fecha'] = df_envio['Fecha'].dt.date
-df_envio['Fecha Prevista'] = df_envio['Fecha Prevista'].dt.date
-df_envio['Fecha Pedido'] = df_envio['Fecha Pedido'].dt.date
-df_envio['Fecha AP VDDL'] = df_envio['Fecha AP VDDL'].dt.date
 print(df_envio)
 
 # TRATAMIENTO DEL DATAFRAME "SIN ENVIAR // df_sin_envio"
 df_sin_envio = erp_data[erp_data['Estado'] == 'Sin Enviar']
-# Transformamos todas las columnas de fechas to_datetime
-df_sin_envio['Fecha'] = pd.to_datetime(df_sin_envio['Fecha'], format="%d-%m-%Y", dayfirst=True)
-df_sin_envio['Fecha Pedido'] = pd.to_datetime(df_sin_envio['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
-df_sin_envio['Fecha Prevista'] = pd.to_datetime(df_sin_envio['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
-df_sin_envio['Estado'] = df_sin_envio['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
 # Añadimos la columna 'Fecha Contractual'
 df_sin_envio.insert(14, 'Fecha Contractual', ((df_sin_envio['Fecha Prevista'] - df_sin_envio['Fecha Pedido']).dt.days // 7))
 df_sin_envio['Fecha Contractual'] = "Aprobación + " + df_sin_envio['Fecha Contractual'].astype(str) + ' Semanas'
 df_sin_envio.insert(15, "Días Devolución", (today_date - df_sin_envio['Fecha Pedido']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
 apply_responsable(df_sin_envio)
 identificar_cliente_por_PO(df_sin_envio) # Aplicar el mapping para cambiar el tipo de 'Cliente'
-# Transformamos todas las fechas al formato 'DIA-MES-AÑO' sin la hora
-df_sin_envio['Fecha'] = df_sin_envio['Fecha'].dt.date
-df_sin_envio['Fecha Prevista'] = df_sin_envio['Fecha Prevista'].dt.date
-df_sin_envio['Fecha Pedido'] = df_sin_envio['Fecha Pedido'].dt.date
 print(df_sin_envio)
 
 # TRATAMIENTO DEL DATAFRAME "CRÍTICOS" Crítico
 df_criticos = erp_data[erp_data['Crítico'] == 'Sí']
-# Transformamos todas las columnas de fechas to_datetime
-df_criticos['Fecha'] = pd.to_datetime(df_criticos['Fecha'], format="%d-%m-%Y", dayfirst=True)
-df_criticos['Fecha Pedido'] = pd.to_datetime(df_criticos['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
-df_criticos['Fecha Prevista'] = pd.to_datetime(df_criticos['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
-df_criticos['Estado'] = df_criticos['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
 df_criticos = df_criticos[df_criticos['Estado'] != 'Eliminado']
 df_criticos = df_criticos[df_criticos['Estado'] != 'Aprobado']
 df_criticos = df_criticos[df_criticos['Estado'] != 'Enviado']
@@ -113,10 +90,6 @@ df_criticos.insert(15, 'Fecha Contractual', ((df_criticos['Fecha Prevista'] - df
 df_criticos['Fecha Contractual'] = "Aprobación + " + df_criticos['Fecha Contractual'].astype(str) + ' Semanas'
 apply_responsable(df_criticos)
 identificar_cliente_por_PO(df_criticos) # Aplicar el mapping para cambiar el tipo de 'Cliente'
-# Transformamos todas las fechas al formato 'DIA-MES-AÑO' sin la hora
-df_criticos['Fecha'] = df_criticos['Fecha'].dt.date
-df_criticos['Fecha Prevista'] = df_criticos['Fecha Prevista'].dt.date
-df_criticos['Fecha Pedido'] = df_criticos['Fecha Pedido'].dt.date
 critics_si = df_criticos[df_criticos['Crítico'] == 'Sí'] # Filtrar los documentos que tienen 'Sí' en la columna 'Crítico'
 print(df_criticos)
 
@@ -148,10 +121,6 @@ print(erp_data)
 print("Generando porcentaje total de los pedidos...")
 
 # TRATAMIENTO DEL DATAFRAME "TODOS LOS DOCUMENTOS"
-df_total['Fecha'] = pd.to_datetime(df_total['Fecha'], format="%d-%m-%Y", dayfirst=True)
-df_total['Fecha Pedido'] = pd.to_datetime(df_total['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
-df_total['Fecha Prevista'] = pd.to_datetime(df_total['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
-df_total['Estado'] = df_total['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
 # Eliminar la columna 'Eliminado' si existe
 df_total = df_total[df_total['Estado'] != 'Eliminado']
 df_total = df_total[df_total['Estado'] != 'Aprobado']
@@ -166,11 +135,6 @@ identificar_cliente_por_PO(df_total) # Aplicar el mapping para cambiar el tipo d
 # Insertamos la columna 'Días VDDL'
 df_total['Fecha AP VDDL'] = pd.to_datetime(df_total['Fecha AP VDDL'], format="mixed", dayfirst=True)
 df_total.insert(17, "Días VDDL", (today_date - df_total['Fecha AP VDDL']).dt.days)
-# Transformamos todas las fechas al formato 'DIA-MES-AÑO' sin la hora
-df_total['Fecha'] = df_total['Fecha'].dt.date
-df_total['Fecha Prevista'] = df_total['Fecha Prevista'].dt.date
-df_total['Fecha Pedido'] = df_total['Fecha Pedido'].dt.date
-df_total['Fecha AP VDDL'] = df_total['Fecha AP VDDL'].dt.date
 print(df_total)
 
 # Reorganizamos las columnas
