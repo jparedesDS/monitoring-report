@@ -11,6 +11,7 @@ from openpyxl.reader.excel import load_workbook
 from tools.mapping_mr import *
 from tools.apply_style_mr import *
 import warnings
+from tqdm import tqdm
 
 
 start_time = time.time()
@@ -23,7 +24,7 @@ erp_data = pd.read_excel(path_total)
 df_total = pd.read_excel(path_total)
 erp_data['Estado'] = erp_data['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
 df_total['Estado'] = df_total['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
-df_total['Estado'] = df_total['Estado'].replace('Aprobado', 'Final') # Ponemos en mayusculas
+#df_total['Estado'] = df_total['Estado'].replace('Aprobado', 'APROBADO') # Ponemos en mayusculas
 # Transformamos todas las columnas de fechas to_datetime
 today_date = pd.to_datetime('today', format='%d-%m-%Y', dayfirst=True)  # Capturamos la fecha actual del día
 today_date_str = today_date.strftime('%d-%m-%Y') # Formateamos la fecha_actual a strf para la lectura y guardado de archivos
@@ -127,7 +128,7 @@ print("Generando porcentaje total de los pedidos...")
 # TRATAMIENTO DEL DATAFRAME "TODOS LOS DOCUMENTOS"
 # Eliminar la columna 'Eliminado' si existe
 df_total = df_total[df_total['Estado'] != 'Eliminado']
-#df_total = df_total[df_total['Estado'] != 'Aprobado'] # Se puede añadir todos los aprobados al total eliminando esta opción
+#df_total = df_total[df_total['Estado'] != 'Final'] # Se puede añadir todos los aprobados al total eliminando esta opción
 df_total.insert(14, "Días Devolución", (today_date - df_total['Fecha']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
 # Añadimos la columna 'Fecha Contractual' dividida en semanas
 df_total.insert(15, 'Fecha Contractual', ((df_total['Fecha Prevista'] - df_total['Fecha Pedido']).dt.days // 7))
@@ -146,7 +147,7 @@ df_comentados = df_comentados.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','
 df_envio = df_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
 df_sin_envio = df_sin_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
 df_criticos = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual'])
-df_total = df_total.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Días Devolución', 'Fecha Prevista', 'Fecha Contractual', 'Historial Rev.', 'Seguimiento'])
+df_total = df_total.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Contractual', 'Historial Rev.', 'Seguimiento'])
 print("¡Generando columnas...!")
 
 # Seleccionamos las columnas que van a ser coloreadas según el 'ESTADO' que tiene la documentación
@@ -159,7 +160,7 @@ with pd.ExcelWriter(r'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monito
         highlight_row_content, value="Comentado", color='#F79646', subset=["Estado"], axis=1).apply(
         highlight_row_content, value="Enviado", color='#B1E1B9', subset=["Estado"], axis=1).apply(
         highlight_row_content, value="Sin Enviar", color='#FFFFAB', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Final", color='#00D25F', subset=["Estado"], axis=1)
+        highlight_row_content, value="Aprobado", color='#00D25F', subset=["Estado"], axis=1)
     style_sheet6.to_excel(writer, sheet_name='ALL DOC.',index=False)  # Grabar el DataFrame con estilos en la hoja 'pending'
     style_sheet_2 = df_envio.style.apply(highlight_row_content, value="Enviado", color='#B1E1B9', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_under_review'
     style_sheet_2.to_excel(writer, sheet_name='ENVIADOS', index=False) # Grabar el DataFrame con estilos en la hoja 'df_under_review'

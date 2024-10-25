@@ -84,7 +84,7 @@ def apply_excel_styles(today_date):
 
         for fila in sheet.iter_rows(min_row=1, max_row=sheet.max_row, min_col=1, max_col=max_col):
             for celda in fila:
-                if celda.value == 'Final':
+                if celda.value == 'Aprobado':
                     celda.font = Font(color='000000', bold=True)
                 if celda.value == 'Sí':
                     celda.font = Font(color='FF5B5B', bold=True)
