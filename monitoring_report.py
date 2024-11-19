@@ -59,8 +59,8 @@ df_comentados['Fecha AP VDDL'] = pd.to_datetime(df_comentados['Fecha AP VDDL'], 
 df_comentados.insert(17, "Días VDDL", (today_date - df_comentados['Fecha AP VDDL']).dt.days)
 # Cambiar el nombre de la columna 'viejo_nombre' a 'nuevo_nombre'
 df_comentados = df_comentados.rename(columns={'Fecha': 'Fecha Dev. Doc.'})
-df_comentados = df_comentados.rename(columns={'Fecha Prevista': 'Fecha PO Salida'})
-df_comentados = df_comentados.rename(columns={'Fecha Pedido': 'Fecha PO Entrada'})
+df_comentados = df_comentados.rename(columns={'Fecha Prevista': 'Fecha FIN'})
+df_comentados = df_comentados.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
 print(df_comentados)
 
 # Tratamiento del dataframe "Under review" // df_envio
@@ -77,8 +77,8 @@ identificar_cliente_por_PO(df_envio) # Aplicar el mapping para cambiar el tipo d
 df_envio['Fecha AP VDDL'] = pd.to_datetime(df_envio['Fecha AP VDDL'], format="mixed", dayfirst=True)
 df_envio.insert(17, "Días VDDL", (today_date - df_envio['Fecha AP VDDL']).dt.days)
 df_envio = df_envio.rename(columns={'Fecha': 'Fecha Env. Doc.'})
-df_envio = df_envio.rename(columns={'Fecha Prevista': 'Fecha PO Salida'})
-df_envio = df_envio.rename(columns={'Fecha Pedido': 'Fecha PO Entrada'})
+df_envio = df_envio.rename(columns={'Fecha Prevista': 'Fecha FIN'})
+df_envio = df_envio.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
 print(df_envio)
 
 # TRATAMIENTO DEL DATAFRAME "SIN ENVIAR // df_sin_envio"
@@ -87,8 +87,8 @@ df_sin_envio = erp_data[erp_data['Estado'] == 'Sin Enviar']
 df_sin_envio.insert(14, 'Fecha Contractual', ((df_sin_envio['Fecha Prevista'] - df_sin_envio['Fecha Pedido']).dt.days // 7))
 df_sin_envio['Fecha Contractual'] = "Aprobación + " + df_sin_envio['Fecha Contractual'].astype(str) + ' Semanas'
 df_sin_envio.insert(15, "Días Devolución", (today_date - df_sin_envio['Fecha Pedido']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
-df_sin_envio = df_sin_envio.rename(columns={'Fecha Prevista': 'Fecha PO Salida'})
-df_sin_envio = df_sin_envio.rename(columns={'Fecha Pedido': 'Fecha PO Entrada'})
+df_sin_envio = df_sin_envio.rename(columns={'Fecha Prevista': 'Fecha FIN'})
+df_sin_envio = df_sin_envio.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
 apply_responsable(df_sin_envio)
 identificar_cliente_por_PO(df_sin_envio) # Aplicar el mapping para cambiar el tipo de 'Cliente'
 print(df_sin_envio)
@@ -105,8 +105,8 @@ df_criticos['Fecha Contractual'] = "Aprobación + " + df_criticos['Fecha Contrac
 apply_responsable(df_criticos)
 identificar_cliente_por_PO(df_criticos) # Aplicar el mapping para cambiar el tipo de 'Cliente'
 df_criticos = df_criticos.rename(columns={'Fecha': 'Fecha Doc.'})
-df_criticos = df_criticos.rename(columns={'Fecha Prevista': 'Fecha PO Salida'})
-df_criticos = df_criticos.rename(columns={'Fecha Pedido': 'Fecha PO Entrada'})
+df_criticos = df_criticos.rename(columns={'Fecha Prevista': 'Fecha FIN'})
+df_criticos = df_criticos.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
 critics_si = df_criticos[df_criticos['Crítico'] == 'Sí'] # Filtrar los documentos que tienen 'Sí' en la columna 'Crítico'
 print(df_criticos)
 
@@ -153,16 +153,16 @@ identificar_cliente_por_PO(df_total) # Aplicar el mapping para cambiar el tipo d
 df_total['Fecha AP VDDL'] = pd.to_datetime(df_total['Fecha AP VDDL'], format="mixed", dayfirst=True)
 df_total.insert(17, "Días VDDL", (today_date - df_total['Fecha AP VDDL']).dt.days)
 df_total = df_total.rename(columns={'Fecha': 'Fecha Doc.'})
-df_total = df_total.rename(columns={'Fecha Prevista': 'Fecha PO Salida'})
-df_total = df_total.rename(columns={'Fecha Pedido': 'Fecha PO Entrada'})
+df_total = df_total.rename(columns={'Fecha Prevista': 'Fecha FIN'})
+df_total = df_total.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
 print(df_total)
 
 # Reorganizamos las columnas
-df_comentados = df_comentados.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha Dev. Doc.', 'Días Devolución', 'Fecha PO Entrada', 'Fecha PO Salida', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
-df_envio = df_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Env. Doc.', 'Fecha PO Entrada', 'Días Devolución', 'Fecha PO Salida', 'Fecha Contractual', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
-df_sin_envio = df_sin_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha PO Entrada', 'Fecha PO Salida', 'Fecha Contractual','Seguimiento'])
-df_criticos = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado','Nº Revisión', 'Fecha Doc.', 'Fecha PO Entrada', 'Días Devolución', 'Fecha PO Salida', 'Fecha Contractual', 'Seguimiento'])
-df_total = df_total.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Doc.', 'Fecha PO Entrada', 'Fecha PO Salida', 'Fecha Contractual', 'Historial Rev.', 'Seguimiento'])
+df_comentados = df_comentados.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha Dev. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
+df_envio = df_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Env. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
+df_sin_envio = df_sin_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha INICIAL', 'Fecha FIN','Seguimiento'])
+df_criticos = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado','Nº Revisión', 'Fecha Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Seguimiento'])
+df_total = df_total.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Doc.', 'Fecha INICIAL', 'Fecha FIN', 'Historial Rev.', 'Seguimiento'])
 print("¡Generando columnas...!")
 
 # Seleccionamos las columnas que van a ser coloreadas según el 'ESTADO' que tiene la documentación

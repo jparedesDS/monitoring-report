@@ -101,7 +101,13 @@ def apply_excel_styles(today_date):
         # Autofiltro de columnas
         sheet.auto_filter.ref = f"A1:{chr(66 + max_col)}{max_row}"
         # Definir el estilo condicional para días de devolución >= 15
-        sheet.conditional_formatting.add(f"O2:O{max_row}", rule_devolucion)
+        # Aplica la regla solo a las hojas "criticos" y "comentados"
+        if sheet.title in ["CRÍTICOS", "ENVIADOS"]:
+            sheet.conditional_formatting.add(f"N2:N{max_row}", rule_devolucion)
+        if sheet.title in ["COMENTADOS"]:
+            sheet.conditional_formatting.add(f"O2:O{max_row}", rule_devolucion)
+
+        #sheet.conditional_formatting.add(f"N2:N{max_row}", rule_devolucion)
 
     def add_chart(sheet):
         chart = BarChart()
