@@ -87,6 +87,3 @@ python monitoring_report.py
 
 ## Resultado Final
 El archivo Excel resultante incluye todas las métricas y estilos necesarios para un seguimiento detallado de los documentos.
-```
-Autor: Jose Paredes
-```
