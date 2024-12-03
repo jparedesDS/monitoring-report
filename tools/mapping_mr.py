@@ -31,7 +31,7 @@ def identificar_cliente_por_PO(df):
                '49000': 'JIGPC/ARAMCO', 'PO 15': 'ASTCOR',
                'Q3710': 'INTECSA INDUSTRIAL', 'RFQ 1': 'BU HASA',
                '70292': 'LECTA', 'APEIS': 'KNPC',
-               '***': 'CEPSA/AYESA', '30012': 'BP OIL/WORLEY',
+               '***': 'CEPSA/AYESA', '30012': 'BP OIL REFINERIA',
                'EC24T': 'ALMARAZ/TRILLO', '10735': 'SULZER',
                '70700': 'CEPSA/WOOD', 'JUS&I': 'ARAMCO/HYUNDAI',
                '70113': 'CEPSA/INERCO', '10620': 'QATARBOP/TR',
@@ -49,7 +49,9 @@ def identificar_cliente_por_PO(df):
 
 # Diccionario de mapeo para la función get_responsable_email()
 def apply_responsable(df):
-    mapping = {'P-22/001': "LB",
+    mapping = {'P-22/001': "LB", 'P-21/009': 'RM', 'P-21/028': 'AC', 'P-21/030': 'LB', 'P-21/038': 'RP',
+                   'P-21/056': 'AC', 'P-21/057': 'LB', 'P-21/060': 'AC',
+                   'P-21/039': 'AC', 'P-21/040': 'AC', 'P-21/053': 'LB', 'P-21/055': 'AC',
                    'P-21/003': "LB", 'P-22/002': "LB", 'P-22/003': "AC", 'P-22/004': "AC",
                    'P-22/005': "AC", 'P-22/006': "LB", 'P-22/007': "LB", 'P-22/008': "AC",
                    'P-22/009': "LB", 'P-22/010': "AC", 'P-22/011': "LB", 'P-22/012': "AC",
@@ -124,8 +126,9 @@ def apply_responsable(df):
                    'P-24/072': "AC", 'P-24/073': "AC", 'P-24/074': "AC", 'P-24/075': "AC",
                    'P-24/076': "AC", 'P-24/077': "AC", 'P-24/078': "AC", 'P-24/079': "SS",
                    'P-24/080': "SS", 'P-24/081': "AC", 'P-24/082': "AC", 'P-24/083': "AC",
-                   'P-24/084': "AC", 'P-24/085': "AC", 'P-24/086': "AC", 'P-24/087': "AC",
-                   'P-24/088': "AC", 'P-24/089': "AC", 'P-24/090': "AC", 'P-24/091': "AC",}
+                   'P-24/084': "AC", 'P-24/085': "LB", 'P-24/086': "CC", 'P-24/087': "AC",
+                   'P-24/088': "AC", 'P-24/089': "AC", 'P-24/090': "AC", 'P-24/091': "AC",
+                   'P-24/092': 'SS', 'P-24/093': 'LB'}
     # Extraemos
     df['Resp.'] = df['Nº Pedido']
 

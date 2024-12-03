@@ -160,8 +160,8 @@ print(df_total)
 # Reorganizamos las columnas
 df_comentados = df_comentados.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha Dev. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
 df_envio = df_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Env. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
-df_sin_envio = df_sin_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha INICIAL', 'Fecha FIN','Seguimiento'])
-df_criticos = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado','Nº Revisión', 'Fecha Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Seguimiento'])
+df_sin_envio = df_sin_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha INICIAL', 'Fecha FIN', 'Seguimiento'])
+df_criticos = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado','Nº Revisión', 'Fecha Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Historial Rev.', 'Seguimiento'])
 df_total = df_total.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Doc.', 'Fecha INICIAL', 'Fecha FIN', 'Historial Rev.', 'Seguimiento'])
 print("¡Generando columnas...!")
 
