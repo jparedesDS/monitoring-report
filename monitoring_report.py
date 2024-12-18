@@ -54,6 +54,7 @@ df_comentados.insert(16, "Fecha AP VDDL", df_comentados['Nº Pedido']) # Inserta
 process_vddl(df_comentados) # Aplicar el mapping para cambiar el tipo de estado en la columna 'Fecha AP VDDL'
 apply_responsable(df_comentados)
 identificar_cliente_por_PO(df_comentados) # Aplicar el mapping para cambiar el tipo de 'Cliente'
+apply_reclamaciones(df_comentados) # Aplicar el mapping para indicar cuantas reclamaciones lleva el documento.
 # Insertamos la columna 'Días VDDL'
 df_comentados['Fecha AP VDDL'] = pd.to_datetime(df_comentados['Fecha AP VDDL'], format="mixed", dayfirst=True)
 df_comentados.insert(17, "Días VDDL", (today_date - df_comentados['Fecha AP VDDL']).dt.days)
@@ -73,6 +74,7 @@ df_envio.insert(16, "Fecha AP VDDL", df_envio['Nº Pedido']) # Insertamos la col
 process_vddl(df_envio) # Aplicar el mapeo para cambiar el tipo de estado en la columna 'Fecha AP VDDL'
 apply_responsable(df_envio)
 identificar_cliente_por_PO(df_envio) # Aplicar el mapping para cambiar el tipo de 'Cliente'
+apply_reclamaciones(df_envio) # Aplicar el mapping para indicar cuantas reclamaciones lleva el documento.
 # Insertamos la columna 'Días VDDL'
 df_envio['Fecha AP VDDL'] = pd.to_datetime(df_envio['Fecha AP VDDL'], format="mixed", dayfirst=True)
 df_envio.insert(17, "Días VDDL", (today_date - df_envio['Fecha AP VDDL']).dt.days)
@@ -104,6 +106,7 @@ df_criticos.insert(15, 'Fecha Contractual', ((df_criticos['Fecha Prevista'] - df
 df_criticos['Fecha Contractual'] = "Aprobación + " + df_criticos['Fecha Contractual'].astype(str) + ' Semanas'
 apply_responsable(df_criticos)
 identificar_cliente_por_PO(df_criticos) # Aplicar el mapping para cambiar el tipo de 'Cliente'
+apply_reclamaciones(df_criticos) # Aplicar el mapping para indicar cuantas reclamaciones lleva el documento.
 df_criticos = df_criticos.rename(columns={'Fecha': 'Fecha Doc.'})
 df_criticos = df_criticos.rename(columns={'Fecha Prevista': 'Fecha FIN'})
 df_criticos = df_criticos.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
@@ -149,6 +152,7 @@ df_total.insert(16, "Fecha AP VDDL", df_total['Nº Pedido']) # Insertamos la col
 process_vddl(df_total) # Aplicar el mapeo para cambiar el tipo de estado en la columna 'Fecha AP VDDL'
 apply_responsable(df_total)
 identificar_cliente_por_PO(df_total) # Aplicar el mapping para cambiar el tipo de 'Cliente'
+apply_reclamaciones(df_total) # Aplicar el mapping para indicar cuantas reclamaciones lleva el documento.
 # Insertamos la columna 'Días VDDL'
 df_total['Fecha AP VDDL'] = pd.to_datetime(df_total['Fecha AP VDDL'], format="mixed", dayfirst=True)
 df_total.insert(17, "Días VDDL", (today_date - df_total['Fecha AP VDDL']).dt.days)
@@ -158,11 +162,11 @@ df_total = df_total.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
 print(df_total)
 
 # Reorganizamos las columnas
-df_comentados = df_comentados.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha Dev. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
-df_envio = df_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Env. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Fecha AP VDDL', 'Días VDDL', 'Historial Rev.', 'Seguimiento'])
+df_comentados = df_comentados.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha Dev. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Reclamaciones', 'Seguimiento', 'Historial Rev.']) # 'Fecha AP VDDL', 'Días VDDL',
+df_envio = df_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Env. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Reclamaciones', 'Seguimiento', 'Historial Rev.']) # 'Fecha AP VDDL', 'Días VDDL',
 df_sin_envio = df_sin_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha INICIAL', 'Fecha FIN', 'Seguimiento'])
-df_criticos = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado','Nº Revisión', 'Fecha Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Historial Rev.', 'Seguimiento'])
-df_total = df_total.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Doc.', 'Fecha INICIAL', 'Fecha FIN', 'Historial Rev.', 'Seguimiento'])
+df_criticos = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado','Nº Revisión', 'Fecha Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Reclamaciones', 'Seguimiento', 'Historial Rev.'])
+df_total = df_total.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Doc.', 'Fecha INICIAL', 'Fecha FIN', 'Reclamaciones', 'Seguimiento', 'Historial Rev.'])
 print("¡Generando columnas...!")
 
 # Seleccionamos las columnas que van a ser coloreadas según el 'ESTADO' que tiene la documentación
