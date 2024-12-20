@@ -37,7 +37,14 @@ def identificar_cliente_por_PO(df):
                '70113': 'CEPSA/INERCO', '10620': 'QATARBOP/TR',
                'ADI-29': 'TECHNIP/SYNKEDIA', '10431': 'QATAREPC4/TR',
                'PO P7': 'TECHNIP/REPSOL', '12574': 'ALPARGATA',
-               'ADI-2': 'TECHNIP/SYNKEDIA', '23000': 'TECHNIP/GALP'}
+               'ADI-2': 'TECHNIP/SYNKEDIA', '23000': 'TECHNIP/GALP',
+               '45077': 'ARAMCO PORTAL', '45000': 'AYESA/REPSOL',
+               '30015': 'BP OIL ESPAÑA', '19162': 'WISON/ARAMCO',
+               '48550': 'WISON/ARAMCO', '20175': 'TECHNIP/REPSOL',
+               'QR-DD': 'ASTCOR/WOOD', 'RFPP-': 'IDOM/REPSOL',
+               '10120': 'TR/DUQM', 'SOCAR': 'SOCAR/EMERSON',
+               '41650': 'SOCAR/EMERSON', 'P-P0C': 'SACYR/REPSOL',
+               'SEG/B': 'SINOPEC/ARAMCO', 'SEG /': 'SINOPEC/ARAMCO'}
 
     # Definir la expresión regular para extraer los primeros 5 dígitos del número de pedido (PO)
     df['Cliente'] = df['Nº PO'].apply(str)
@@ -51,9 +58,19 @@ def apply_reclamaciones(df):
                'V-23Q8LA02A-2206-3000-PAFE0735-DWG-001': 1, 'V-23Q8LA02A-2206-3000-PAFE0710-DWG-001': 1,
                'V-23Q8LA02A-2206-3000-PAFE0703-DWG-001': 1, 'VD-CI0021-010': 2,
                '3998_18-1037010710-00025': 2, '3998_18-1037010710-00002': 2,
-               'VD-CI0021-025': 1, 'VD-CI0021-014': 1,
-               'VD-CI0021-008': 1, 'VD-CI0021-014': 1,
-               'VD-CI0021-012': 1, 'VD-CI0021-014': 1,}
+               'VD-CI0021-025': 1, 'V-23BLFE01A-2206-400-10TE1502-CAL-001': 1,
+               'VD-CI0021-008': 1, 'V-23BLFE01A-2206-400-10TE1501-CAL-001': 1,
+               'V-23BLFE01A-2206-400-15TE1510-CAL-001': 1, 'V-23BLFE01A-2206-400-15TE1510-DWG-001': 1,
+               'V-1040010640-0028': 1, 'V-1040010640-0026': 1,
+               'V-1040010640-0003': 1, '3998_18-1037010640-00022': 1,
+               '3998_18-1037010640-00020': 1, '3998_18-1037010640-00015': 1,
+               '3998_18-1037010640-00029': 1, 'VD-CI0021-014': 1,
+               'VD-CI0021-003': 1, 'VD-CI0021-006': 1,
+               'VD-CI0021-019': 1, 'VD-CI0021-007': 1,
+               'VD-CI0021-002': 1, 'VD-CI0021-017': 1,
+               '5022_20-1043010710-00004': 1, '3998_18-1062010640-00015': 1,
+               '3998_18-1062010910-00009': 1, '3998_18-1062010910-00006': 1,
+               '3998_18-1062010910-00013': 1, '3998_18-1062010910-00001': 1,}
 
     # Extraemos
     df['Reclamaciones'] = df['Nº Doc. Cliente']
