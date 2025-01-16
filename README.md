@@ -1,47 +1,47 @@
 # Monitoring Report for ERP
 
-Este script realiza el procesamiento de datos extraídos de un ERP y los organiza en diferentes dataframes según su estado. Además, genera un archivo Excel estilizado con varias hojas que representan diferentes vistas del estado de los documentos.
+This script processes data extracted from an ERP and organises them in different dataframes according to their status. In addition, it generates a stylised Excel file with several sheets representing different views of the status of the documents.
 
-## Requisitos Previos
+## Prerequisites
 
-### Librerías Necesarias
-Asegúrate de instalar las siguientes librerías antes de ejecutar el script:
+### Necessary Libraries
+Make sure to install the following libraries before running the script:
 
 ```bash
 pip install pandas xlsxwriter openpyxl tqdm aspose-cells
 ```
 
-## Estructura del Proyecto
-El script utiliza herramientas y mapeos personalizados que deben estar incluidos en la carpeta tools. 
-Estas herramientas son:
+## Project Structure
+The script uses custom tools and mappings that must be included in the tools folder.
+These tools are:
 
 - mapping_mr.py
 - apply_style_mr.py
 
-## Funcionalidades del Script
-#### Principales Funciones
-1. Importación y Limpieza de Datos
-- Carga un archivo Excel con información del ERP.
-- Realiza limpieza y formateo, como llenar valores nulos y convertir fechas.
-2. Procesamiento por Estado
-- Divide los datos en diferentes grupos (Enviado, Sin Enviar, Comentado, etc.).
-- Calcula métricas como días de devolución, semanas contractuales, y notas adicionales.
-3. Estilización y Exportación
-- Aplica estilos personalizados a los dataframes.
-- Exporta los datos a un archivo Excel con hojas separadas.
+## Script functionalities
+#### Main functions
+1. Data Import and Data Cleansing
+- Loads an Excel file with information from the ERP.
+- Performs cleaning and formatting, such as filling null values and converting dates.
+2. Processing by Status
+- Divides data into different groups (Sent, Not Sent, Commented, etc.).
+- Calculates metrics such as return days, contract weeks, and additional notes.
+3. Styling and Exporting
+- Apply custom styles to dataframes.
+- Export data to an Excel file with separate sheets.
   
-## Organización de Hojas en Excel
+## Organisation of Excel Sheets
 El archivo final incluye las siguientes hojas:
 
-- ALL DOC.: Todos los documentos con estilos según su estado.
-- ENVIADOS: Documentos en estado "Enviado".
-- SIN ENVIAR: Documentos en estado "Sin Enviar".
-- COMENTADOS: Documentos con comentarios ("Com. Menores", "Com. Mayores", etc.).
-- STATUS: Gráfica de seguimiento general.
+- ALL DOC.: All documents styled according to their status.
+- ENVIADOS: Documents in "Sent" status.
+- SIN ENVIAR: Documents in "Unsent" status.
+- COMENTADOS: Documents with comments ("Minor Com.", "Major Com.", etc.).
+- STATUS: General tracking chart.
 
-## Estructura del Código
-#### Imports y Configuración Inicial
-El script importa las librerías necesarias y configura la ruta del archivo de datos:
+## Structure of the Code
+#### Imports and Initial Configuration
+The script imports the necessary libraries and configures the path to the data file:
 ```
 import os
 import time
@@ -50,21 +50,22 @@ import xlsxwriter
 from tools.mapping_mr import *
 from tools.apply_style_mr import *
 ```
-## Carga de Datos y Transformaciones
-#### Carga los datos desde un archivo Excel y realiza las siguientes transformaciones:
+## Data Loading and Transformations
+#### Load the data from an Excel file and perform the following transformations:
 
-- Relleno de valores nulos.
-- Conversión de fechas a datetime.
-- Cálculo de columnas adicionales como Días Devolución y Fecha Contractual.
-## Procesamiento por Estado
-Los datos se dividen en los siguientes grupos:
+- Filling of null values.
+- Conversion of dates to datetime.
+- Calculation of additional columns such as Return Days and Contract Date.
+  
+## Processing by State
+The data are divided into the following groups:
 
-- Comentados: Estados como "Com. Menores", "Com. Mayores" o "Rechazado".
-- Enviados: Documentos marcados como "Enviado".
-- Sin Enviar: Documentos sin enviar.
-- Aprobado: Documentación finalizada.
-## Generación del Archivo Final
-Se crea un archivo Excel estilizado donde cada hoja representa un grupo de datos procesados.
+- Annotated: Statuses such as "Minor Com.", "Major Com." or "Rejected".
+- Sent: Documents marked as "Sent".
+- Unsent: Documents not sent.
+- Approved: Documentation finalised.
+## Final File Generation
+A stylised Excel file is created where each sheet represents a set of processed data.
 
 ```
 with pd.ExcelWriter('monitoring_report_' + str(today_date_str) + '.xlsx', engine='xlsxwriter') as writer:
@@ -73,17 +74,17 @@ with pd.ExcelWriter('monitoring_report_' + str(today_date_str) + '.xlsx', engine
     style_sheet_3.to_excel(writer, sheet_name='SIN ENVIAR', index=False)
 ```
 
-## Cómo Ejecutar el Script
-1. Coloca el archivo de datos (data_erp.xlsx) en la ruta especificada.
-2. Ejecuta el script con Python:
+## How to Run the Script
+1. Place the data file (data_erp.xlsx) in the specified path.
+2. Run the script with Python:
 ```
 python monitoring_report.py
 ```
-3. Encuentra el archivo generado en la carpeta data.
+3. Find the generated file in the data folder.
    
-## Notas Adicionales
-- Estilización: Los estilos de las celdas se aplican según el estado del documento, utilizando colores definidos.
-- Personalización: Puedes ajustar las columnas que se procesan y los colores para adaptarlos a tus necesidades.
+## Additional Notes
+- Styling: Cell styles are applied according to the state of the document, using defined colours.
+- Customisation: You can adjust the columns that are processed and the colours to suit your needs.
 
-## Resultado Final
-El archivo Excel resultante incluye todas las métricas y estilos necesarios para un seguimiento detallado de los documentos.
+## Final Result
+The resulting Excel file includes all the metrics and styles necessary for detailed document tracking.
