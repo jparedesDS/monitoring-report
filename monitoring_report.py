@@ -28,10 +28,10 @@ df_total['Estado'] = df_total['Estado'].fillna('Sin Enviar') # Completamos la co
 # Transformamos todas las columnas de fechas to_datetime
 today_date = pd.to_datetime('today', format='%d-%m-%Y', dayfirst=True)  # Capturamos la fecha actual del día
 today_date_str = today_date.strftime('%d-%m-%Y') # Formateamos la fecha_actual a strf para la lectura y guardado de archivos
-erp_data['Fecha'] = pd.to_datetime(erp_data['Fecha'], format="%d-%m-%Y", dayfirst=True)
+erp_data['Fecha'] = pd.to_datetime(erp_data['Fecha'], format="mixed", dayfirst=True)
 erp_data['Fecha Pedido'] = pd.to_datetime(erp_data['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
 erp_data['Fecha Prevista'] = pd.to_datetime(erp_data['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
-df_total['Fecha'] = pd.to_datetime(df_total['Fecha'], format="%d-%m-%Y", dayfirst=True)
+df_total['Fecha'] = pd.to_datetime(df_total['Fecha'], format="mixed", dayfirst=True)
 df_total['Fecha Pedido'] = pd.to_datetime(df_total['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
 df_total['Fecha Prevista'] = pd.to_datetime(df_total['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
 
