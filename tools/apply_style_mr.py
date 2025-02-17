@@ -94,7 +94,7 @@ def apply_excel_styles(today_date):
                     celda.font = Font(color='7030A0', bold=True)
                 if celda.value == 'SS':
                     celda.font = Font(color='FF5B5B', bold=True)
-                if celda.value == 'CCH':
+                if celda.value == 'CC':
                     celda.font = Font(color='545454', bold=True)
                 if celda.value == 100:
                     celda.font = Font(color='FF5B5B', bold=True)
