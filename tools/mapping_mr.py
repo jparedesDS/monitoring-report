@@ -47,7 +47,7 @@ def identificar_cliente_por_PO(df):
                'SEG/B': 'SINOPEC/ARAMCO', 'SEG /': 'SINOPEC/ARAMCO',
                '10651': 'ARAMCO/RIYAS', '45124': 'ADNOC/YOKOGAWA',
                'O-23/': 'SINES/YOKOGAWA', 'O-24/': 'SENER/GATE',
-               '70113': 'CEPSA'}
+               'GAT22500': 'SENER/GATE', '45126': 'ADNOC/YOKOGAWA'}
 
     # Definir la expresión regular para extraer los primeros 5 dígitos del número de pedido (PO)
     df['Cliente'] = df['Nº PO'].apply(str)
