@@ -1,233 +1,391 @@
-# Imports
-import os
 import time
-import pandas as pd
-import xlsxwriter
-import jpype
-import asposecells
-jpype.startJVM()
-from asposecells.api import Workbook
-from openpyxl.reader.excel import load_workbook
-from tools.mapping_mr import *
-from tools.apply_style_mr import *
 import warnings
-from tqdm import tqdm
-
-
-start_time = time.time()
+import pandas as pd
+from openpyxl import load_workbook
 warnings.filterwarnings('ignore')
-# Ruta del archivo excel con todos lo datos del ERP
-path_total = 'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data_import\\data_erp.xlsx'
+start_time = time.time()
 
-# Tratamiento dataset general
-erp_data = pd.read_excel(path_total)
-df_total = pd.read_excel(path_total)
-erp_data['Estado'] = erp_data['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
-df_total['Estado'] = df_total['Estado'].fillna('Sin Enviar') # Completamos la columna 'Estado' con 'Sin Enviar'
-#df_total['Estado'] = df_total['Estado'].replace('Aprobado', 'APROBADO') # Ponemos en mayusculas
-# Transformamos todas las columnas de fechas to_datetime
-today_date = pd.to_datetime('today', format='%d-%m-%Y', dayfirst=True)  # Capturamos la fecha actual del día
-today_date_str = today_date.strftime('%d-%m-%Y') # Formateamos la fecha_actual a strf para la lectura y guardado de archivos
-erp_data['Fecha'] = pd.to_datetime(erp_data['Fecha'], format="mixed", dayfirst=True)
-erp_data['Fecha Pedido'] = pd.to_datetime(erp_data['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
-erp_data['Fecha Prevista'] = pd.to_datetime(erp_data['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
-df_total['Fecha'] = pd.to_datetime(df_total['Fecha'], format="mixed", dayfirst=True)
-df_total['Fecha Pedido'] = pd.to_datetime(df_total['Fecha Pedido'], format="%d-%m-%Y", dayfirst=True)
-df_total['Fecha Prevista'] = pd.to_datetime(df_total['Fecha Prevista'], format="%d-%m-%Y", dayfirst=True)
+# === RUTA Y LECTURA DE DATOS ===
+data_path_total = r'C:\Users\alejandro.berzal\Desktop\DATA SCIENCE\new-monitoring-report\data_import\data_erp.xlsx'
+erp_data = pd.read_excel(data_path_total)
+df_total = pd.read_excel(data_path_total)
+consultar_data_path_total = r'C:\Users\alejandro.berzal\Desktop\DATA SCIENCE\new-monitoring-report\data_import\consulta_erp.xlsx'
+consulta_data = pd.read_excel(consultar_data_path_total)
 
-# Tratamiento del dataframe "Pending" // df_comentados
-df_menores = erp_data[erp_data['Estado'] == 'Com. Menores']
-df_mayores = erp_data[erp_data['Estado'] == 'Com. Mayores']
-df_rechazado = erp_data[erp_data['Estado'] == 'Rechazado']
-df_comentados = pd.concat([df_menores, df_mayores, df_rechazado]) # Unimos los tres DataFrames
-# Transformamos todas las columnas de fechas to_datetime
-df_comentados.insert(12, "Notas", df_comentados['Estado']) # Insertar nueva columna 'Notas' en el dataframe
-df_comentados['Notas'] = df_comentados['Fecha'] # Añadimos en la columna 'Notas' la fecha del pedido
-# Sumar 15 días a la columna 'Notas' cuando la columna contiene 'Rechazado, Com. Menores, Com. Mayores, Comentado'
-df_comentados.loc[df_comentados['Notas'] == df_comentados['Fecha'], 'Notas'] += pd.to_timedelta(15, unit='D')
-df_comentados['Notas'] = "Enviar antes del " + df_comentados['Notas'].dt.strftime('%d-%m-%Y') # Transformamos la fecha a formato 'DIA-MES-AÑO'
-df_comentados.insert(15, "Días Devolución", (today_date - df_comentados['Fecha']).dt.days) # Insertar nueva columna 'Días devolución' y se resta utilizando la fecha actual(today)
-# Añadimos la columna 'Fecha Contractual' dividida en semanas
-df_comentados.insert(18, 'Fecha Contractual', ((df_comentados['Fecha Prevista'] - df_comentados['Fecha Pedido']).dt.days // 7))
-df_comentados['Fecha Contractual'] = "Aprobación + " + df_comentados['Fecha Contractual'].astype(str) + ' Semanas'
-df_comentados.insert(16, "Fecha AP VDDL", df_comentados['Nº Pedido']) # Insertamos la columna 'Fecha AP VDDL'
-process_vddl(df_comentados) # Aplicar el mapping para cambiar el tipo de estado en la columna 'Fecha AP VDDL'
-apply_responsable(df_comentados)
-identificar_cliente_por_PO(df_comentados) # Aplicar el mapping para cambiar el tipo de 'Cliente'
-apply_reclamaciones(df_comentados) # Aplicar el mapping para indicar cuantas reclamaciones lleva el documento.
-# Insertamos la columna 'Días VDDL'
-df_comentados['Fecha AP VDDL'] = pd.to_datetime(df_comentados['Fecha AP VDDL'], format="mixed", dayfirst=True)
-df_comentados.insert(17, "Días VDDL", (today_date - df_comentados['Fecha AP VDDL']).dt.days)
-# Cambiar el nombre de la columna 'viejo_nombre' a 'nuevo_nombre'
-df_comentados = df_comentados.rename(columns={'Fecha': 'Fecha Dev. Doc.'})
-df_comentados = df_comentados.rename(columns={'Fecha Prevista': 'Fecha FIN'})
-df_comentados = df_comentados.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
-print(df_comentados)
+# === UNIR COLUMNAS 'Responsable' Y 'Nº Oferta' DESDE consulta_data ===
+cols_to_add = ['Nº Pedido', 'Responsable', 'Nº Oferta']
+missing_cols = [col for col in cols_to_add if col not in consulta_data.columns]
+if missing_cols:
+    print(f"⚠️ Columnas faltantes en consulta_data: {missing_cols}")
+else:
+    df_total = df_total.merge(consulta_data[cols_to_add], on='Nº Pedido', how='left')
+    erp_data = erp_data.merge(consulta_data[cols_to_add], on='Nº Pedido', how='left')
 
-# Tratamiento del dataframe "Under review" // df_envio
-df_envio = erp_data[erp_data['Estado'] == 'Enviado']
-df_envio.insert(14, "Días Devolución", (today_date - df_envio['Fecha']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
-# Añadimos la columna 'Fecha Contractual' dividida en semanas
-df_envio.insert(15, 'Fecha Contractual', ((df_envio['Fecha Prevista'] - df_envio['Fecha Pedido']).dt.days // 7))
-df_envio['Fecha Contractual'] = "Aprobación + " + df_envio['Fecha Contractual'].astype(str) + ' Semanas'
-df_envio.insert(16, "Fecha AP VDDL", df_envio['Nº Pedido']) # Insertamos la columna 'Fecha AP VDDL'
-process_vddl(df_envio) # Aplicar el mapeo para cambiar el tipo de estado en la columna 'Fecha AP VDDL'
-apply_responsable(df_envio)
-identificar_cliente_por_PO(df_envio) # Aplicar el mapping para cambiar el tipo de 'Cliente'
-apply_reclamaciones(df_envio) # Aplicar el mapping para indicar cuantas reclamaciones lleva el documento.
-# Insertamos la columna 'Días VDDL'
-df_envio['Fecha AP VDDL'] = pd.to_datetime(df_envio['Fecha AP VDDL'], format="mixed", dayfirst=True)
-df_envio.insert(17, "Días VDDL", (today_date - df_envio['Fecha AP VDDL']).dt.days)
-df_envio = df_envio.rename(columns={'Fecha': 'Fecha Env. Doc.'})
-df_envio = df_envio.rename(columns={'Fecha Prevista': 'Fecha FIN'})
-df_envio = df_envio.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
-print(df_envio)
+# === LIMPIEZA Y FORMATEO DE FECHAS ===
+erp_data['Estado'] = erp_data['Estado'].fillna('Sin Enviar')
+df_total['Estado'] = df_total['Estado'].fillna('Sin Enviar')
+erp_data = erp_data[erp_data['Estado'] != 'Eliminado'].copy()
+df_total = df_total[df_total['Estado'] != 'Eliminado'].copy()
+today_date = pd.to_datetime('today')
+today_date_str = today_date.strftime('%d-%m-%Y')
 
-# TRATAMIENTO DEL DATAFRAME "SIN ENVIAR // df_sin_envio"
-df_sin_envio = erp_data[erp_data['Estado'] == 'Sin Enviar']
-# Añadimos la columna 'Fecha Contractual'
-df_sin_envio.insert(14, 'Fecha Contractual', ((df_sin_envio['Fecha Prevista'] - df_sin_envio['Fecha Pedido']).dt.days // 7))
-df_sin_envio['Fecha Contractual'] = "Aprobación + " + df_sin_envio['Fecha Contractual'].astype(str) + ' Semanas'
-df_sin_envio.insert(15, "Días Devolución", (today_date - df_sin_envio['Fecha Pedido']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
-df_sin_envio = df_sin_envio.rename(columns={'Fecha Prevista': 'Fecha FIN'})
-df_sin_envio = df_sin_envio.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
-apply_responsable(df_sin_envio)
-identificar_cliente_por_PO(df_sin_envio) # Aplicar el mapping para cambiar el tipo de 'Cliente'
-print(df_sin_envio)
+for df in [erp_data, df_total, consulta_data]:
+    for col in ['Fecha', 'Fecha Pedido', 'Fecha Prevista', 'Fecha Fabricación', 'Fecha Montaje', 'Fecha Envío']:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors='coerce', dayfirst=True)
 
-# TRATAMIENTO DEL DATAFRAME "CRÍTICOS" Crítico
-df_criticos = erp_data[erp_data['Crítico'] == 'Sí']
-df_criticos = df_criticos[df_criticos['Estado'] != 'Eliminado']
-df_criticos = df_criticos[df_criticos['Estado'] != 'Aprobado']
-df_criticos = df_criticos[df_criticos['Estado'] != 'Enviado']
-df_criticos.insert(14, "Días Devolución", (today_date - df_criticos['Fecha']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
-# Añadimos la columna 'Fecha Contractual'
-df_criticos.insert(15, 'Fecha Contractual', ((df_criticos['Fecha Prevista'] - df_criticos['Fecha Pedido']).dt.days // 7))
-df_criticos['Fecha Contractual'] = "Aprobación + " + df_criticos['Fecha Contractual'].astype(str) + ' Semanas'
-apply_responsable(df_criticos)
-identificar_cliente_por_PO(df_criticos) # Aplicar el mapping para cambiar el tipo de 'Cliente'
-apply_reclamaciones(df_criticos) # Aplicar el mapping para indicar cuantas reclamaciones lleva el documento.
-df_criticos = df_criticos.rename(columns={'Fecha': 'Fecha Doc.'})
-df_criticos = df_criticos.rename(columns={'Fecha Prevista': 'Fecha FIN'})
-df_criticos = df_criticos.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
-critics_si = df_criticos[df_criticos['Crítico'] == 'Sí'] # Filtrar los documentos que tienen 'Sí' en la columna 'Crítico'
-print(df_criticos)
+# === DATAFRAMES SEGÚN ESTADO ===
+df_comentados = erp_data[erp_data['Estado'].isin(['Com. Menores', 'Com. Mayores', 'Rechazado', 'Comentado'])].copy()
+df_envio = erp_data[erp_data['Estado'] == 'Enviado'].copy()
+df_sin_envio = erp_data[erp_data['Estado'] == 'Sin Enviar'].copy()
+df_criticos = erp_data[(erp_data['Crítico'] == 'Sí') & (~erp_data['Estado'].isin(['Eliminado', 'Aprobado', 'Enviado']))].copy()
 
-# TRATAMIENTO DEL DATAFRAME "GRÁFICOS / df5"
-# Contar la frecuencia de cada estado por 'Nº Pedido'
-erp_data = erp_data.groupby(['Nº Pedido', 'Estado']).size().unstack(fill_value=0).reset_index()
-# Eliminar la columna 'Eliminado' si existe
-erp_data = erp_data.drop(columns=['Eliminado'])
-# Lista de columnas necesarias
-columnas_necesarias = ['Aprobado', 'Com. Mayores', 'Com. Menores', 'Enviado', 'Rechazado', 'Sin Enviar']
-# Asegurarnos de que cada columna necesaria existe y añadirla con 0 si no existe
-for columna in columnas_necesarias:
-    if columna not in erp_data.columns:
-        erp_data[columna] = 0
-erp_data['Total'] = erp_data.iloc[:, 1:8].sum(axis=1)
-suma_total = erp_data['Total']
-suma_total_general = erp_data['Aprobado']
-# Calcular el porcentaje total
-porcentaje_total = (suma_total_general / suma_total) * 100
-erp_data['% Completado'] = porcentaje_total
-erp_data = erp_data.reindex(columns=['Nº Pedido', '% Completado', 'Aprobado', 'Com. Mayores', 'Com. Menores', 'Enviado', 'Rechazado', 'Sin Enviar', 'Total'])
-# Ordenar los datos por una columna específica en orden descendente (de Z a A)
-columna_para_ordenar = 'Nº Pedido'  # Reemplaza con el nombre de tu columna
-erp_data = erp_data.sort_values(by=columna_para_ordenar, ascending=False)
-erp_data['% Completado'] = erp_data['% Completado'].fillna(0) # Completamos la columna '% Completado' con '0'
-erp_data = erp_data[erp_data['% Completado'] != 100] # Eliminamos los pedidos que se encuentren 100% completos
-erp_data = erp_data.round(2) # Que muestre máximo 2 decimales
-print(erp_data)
-print("Generando porcentaje total de los pedidos...")
+# === COLUMNAS CALCULADAS (Días Devolución) ===
+for df, fecha_ref in [(df_comentados, 'Fecha'), (df_envio, 'Fecha'), (df_criticos, 'Fecha')]:
+    if fecha_ref in df.columns:
+        df['Días Devolución'] = (today_date - df[fecha_ref]).dt.days
+if 'Fecha Pedido' in df_sin_envio.columns:
+    df_sin_envio['Días Devolución'] = (today_date - df_sin_envio['Fecha Pedido']).dt.days
 
-# TRATAMIENTO DEL DATAFRAME "TODOS LOS DOCUMENTOS"
-# Eliminar la columna 'Eliminado' si existe
-df_total = df_total[df_total['Estado'] != 'Eliminado']
-#df_total = df_total[df_total['Estado'] != 'Final'] # Se puede añadir todos los aprobados al total eliminando esta opción
-df_total.insert(14, "Días Devolución", (today_date - df_total['Fecha']).dt.days) # Insertar nueva columna 'Días Devolución' y restamos a la fecha actual para que nos de el total de días
-# Añadimos la columna 'Fecha Contractual' dividida en semanas
-df_total.insert(15, 'Fecha Contractual', ((df_total['Fecha Prevista'] - df_total['Fecha Pedido']).dt.days // 7))
-df_total['Fecha Contractual'] = "Aprobación + " + df_total['Fecha Contractual'].astype(str) + ' Semanas'
-df_total.insert(16, "Fecha AP VDDL", df_total['Nº Pedido']) # Insertamos la columna 'Fecha AP VDDL'
-process_vddl(df_total) # Aplicar el mapeo para cambiar el tipo de estado en la columna 'Fecha AP VDDL'
-apply_responsable(df_total)
-identificar_cliente_por_PO(df_total) # Aplicar el mapping para cambiar el tipo de 'Cliente'
-apply_reclamaciones(df_total) # Aplicar el mapping para indicar cuantas reclamaciones lleva el documento.
-# Insertamos la columna 'Días VDDL'
-df_total['Fecha AP VDDL'] = pd.to_datetime(df_total['Fecha AP VDDL'], format="mixed", dayfirst=True)
-df_total.insert(17, "Días VDDL", (today_date - df_total['Fecha AP VDDL']).dt.days)
-df_total = df_total.rename(columns={'Fecha': 'Fecha Doc.'})
-df_total = df_total.rename(columns={'Fecha Prevista': 'Fecha FIN'})
-df_total = df_total.rename(columns={'Fecha Pedido': 'Fecha INICIAL'})
-print(df_total)
+# === RENOMBRAR COLUMNAS CLAVE ===
+def rename_columns(df, fecha_old, new_name):
+    if fecha_old in df.columns:
+        df = df.rename(columns={fecha_old: new_name})
+    return df
+df_comentados = rename_columns(df_comentados, 'Fecha', 'Fecha Dev. Doc.')
+df_envio = rename_columns(df_envio, 'Fecha', 'Fecha Env. Doc.')
+df_criticos = rename_columns(df_criticos, 'Fecha', 'Fecha Doc.')
+df_total = rename_columns(df_total, 'Fecha', 'Fecha Doc.')
+df_sin_envio = rename_columns(df_sin_envio, 'Fecha', 'Fecha Doc.')
 
-# Reorganizamos las columnas
-df_comentados = df_comentados.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO','Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.', 'Crítico', 'Estado', 'Notas','Nº Revisión', 'Fecha Dev. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Reclamaciones', 'Seguimiento', 'Historial Rev.']) # 'Fecha AP VDDL', 'Días VDDL',
-df_envio = df_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Env. Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Reclamaciones', 'Seguimiento', 'Historial Rev.']) # 'Fecha AP VDDL', 'Días VDDL',
-df_sin_envio = df_sin_envio.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Fecha INICIAL', 'Fecha FIN', 'Seguimiento'])
-df_criticos = critics_si.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado','Nº Revisión', 'Fecha Doc.', 'Días Devolución', 'Fecha INICIAL', 'Fecha FIN', 'Reclamaciones', 'Seguimiento', 'Historial Rev.'])
-df_total = df_total.reindex(columns=['Nº Pedido', 'Resp.', 'Nº PO', 'Cliente', 'Material', 'Nº Doc. Cliente', 'Nº Doc. EIPSA', 'Título', 'Tipo Doc.' , 'Crítico', 'Estado', 'Nº Revisión', 'Fecha Doc.', 'Fecha INICIAL', 'Fecha FIN', 'Reclamaciones', 'Seguimiento', 'Historial Rev.'])
-print("¡Generando columnas...!")
+# === CÁLCULO DE NOTAS EN df_comentados ===
+df_comentados.insert(12, "Notas", df_comentados['Fecha Dev. Doc.'])
+mask = df_comentados['Estado'].isin(['Rechazado', 'Com. Menores', 'Com. Mayores', 'Comentado'])
+df_comentados.loc[mask, 'Notas'] += pd.to_timedelta(15, unit='D')
+df_comentados['Notas'] = "Enviar antes del " + df_comentados['Notas'].dt.strftime('%d-%m-%Y')
 
-# Seleccionamos las columnas que van a ser coloreadas según el 'ESTADO' que tiene la documentación
-with pd.ExcelWriter(r'C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data\\monitoring_report_' + str(today_date_str) + '.xlsx', engine='xlsxwriter') as writer:
-    # Aplicar estilos a cada hoja de excel
-    style_sheet6 = df_total.style.apply(
-        highlight_row_content, value="Rechazado", color='#FFA19A', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Com. Menores", color='#FFE5AD', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Com. Mayores", color='#DBB054', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Comentado", color='#F79646', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Enviado", color='#B1E1B9', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Sin Enviar", color='#FFFFAB', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Aprobado", color='#00D25F', subset=["Estado"], axis=1)
-    style_sheet6.to_excel(writer, sheet_name='ALL DOC.',index=False)  # Grabar el DataFrame con estilos en la hoja 'pending'
-    style_sheet_2 = df_envio.style.apply(highlight_row_content, value="Enviado", color='#B1E1B9', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_under_review'
-    style_sheet_2.to_excel(writer, sheet_name='ENVIADOS', index=False) # Grabar el DataFrame con estilos en la hoja 'df_under_review'
-    style_sheet_3 = df_sin_envio.style.apply(highlight_row_content, value='Sin Enviar', color='#FFFFAB', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_to_upload'
-    style_sheet_3.to_excel(writer, sheet_name='SIN ENVIAR', index=False) # Grabar el DataFrame con estilos en la hoja 'to_upload'
-    style_sheet = df_comentados.style.apply(
-        highlight_row_content, value="Rechazado", color='#FFA19A', subset=["Estado", "Notas"], axis=1).apply(
-        highlight_row_content, value="Com. Menores", color='#FFE5AD', subset=["Estado", "Notas"], axis=1).apply(
-        highlight_row_content, value="Com. Mayores", color='#DBB054', subset=["Estado", "Notas"], axis=1).apply(
-        highlight_row_content, value="Comentado", color='#F79646', subset=["Estado", "Notas"], axis=1)
-    style_sheet.to_excel(writer, sheet_name='COMENTADOS', index=False) # Grabar el DataFrame con estilos en la hoja 'pending'
-    style_sheet_4 = df_criticos.style.apply(highlight_row_content, value="Rechazado", color='#FFA19A', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Com. Menores", color='#FFE5AD', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Com. Mayores", color='#DBB054', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Comentado", color='#F79646', subset=["Estado"], axis=1).apply(
-        highlight_row_content, value="Sin Enviar", color='#FFFFAB', subset=["Estado"], axis=1) # Aplicar estilos al DataFrame 'df_to_upload'
-    style_sheet_4.to_excel(writer, sheet_name='CRÍTICOS', index=False) # Grabar el DataFrame con estilos en la hoja 'to_upload'
-    erp_data.to_excel(writer, sheet_name='STATUS GLOBAL', index=False) # Grabar el DataFrame con estilos en la hoja 'pending'
-print("¡Estilo, formato y color aplicado correctamente a todas las hojas del excel!")
+# === STATUS GLOBAL ===
+status_global = (
+    erp_data.groupby(['Nº Pedido', 'Estado'])
+    .size()
+    .unstack(fill_value=0)
+    .reset_index()
+)
+if 'Eliminado' in status_global.columns:
+    status_global = status_global.drop(columns='Eliminado')
+for col in ['Aprobado', 'Com. Mayores', 'Com. Menores', 'Enviado', 'Rechazado', 'Sin Enviar']:
+    if col not in status_global.columns:
+        status_global[col] = 0
+status_global['Total'] = status_global.iloc[:, 1:].sum(axis=1)
+status_global['% Completado'] = (status_global['Aprobado'] / status_global['Total'] * 100).fillna(0).round(2)
+status_global = status_global[status_global['% Completado'] != 100]
 
-# Cargar archivo de Excel con las tres hojas de datos
-wb = Workbook('C:\\Users\\alejandro.berzal\\Desktop\\DATA SCIENCE\\monitoring_report\\data\\monitoring_report_' + today_date_str + '.xlsx')
-# Obtener la referencia de las hojas/sheets de trabajo deseadas
-sheets = {"ALL DOC.": wb.getWorksheets().get("ALL DOC."),
-          "COMENTADOS": wb.getWorksheets().get("COMENTADOS"),
-          "ENVIADOS": wb.getWorksheets().get("ENVIADOS"),
-          "SIN ENVIAR": wb.getWorksheets().get("SIN ENVIAR"),
-          "CRÍTICOS": wb.getWorksheets().get("CRÍTICOS"),
-          "STATUS GLOBAL":wb.getWorksheets().get("STATUS GLOBAL")}
+# === UNIFICAR PENDIENTES ===
+#df_pendientes = pd.concat([df_sin_envio, df_comentados], ignore_index=True)
 
-# Ajuste automático de todas las columnas en cada hoja
-for sheet_name, sheet in sheets.items():
-    if sheet:
-        auto_fit_columns(sheet)
-wb.save("Monitoring_Report_" + str(today_date_str) + ".xlsx") # Guardar libro de trabajo
-print("¡Columnas y celdas ajustadas para una mejor visualización!")
+# === ORDENAR COLUMNAS ===
+column_order = [
+    'Nº Pedido', 'Responsable', 'Nº Oferta', 'Nº PO', 'Cliente', 'Material',
+    'Fecha Pedido', 'Fecha Prevista', 'Nº Doc. Cliente', 'Nº Doc. EIPSA',
+    'Título', 'Tipo Doc.', 'Info/Review', 'Repsonsable', 'Días Envío', 'Crítico', 'Estado', 'Notas', 'Nº Revisión',
+    'Fecha Doc.', 'Fecha Env. Doc.', 'Fecha Dev. Doc.', 'Días Devolución',
+    'Reclamaciones', 'Seguimiento', 'Historial Rev.'
+]
+def reorder_columns(df):
+    existing_cols = [col for col in column_order if col in df.columns]
+    remaining_cols = [col for col in df.columns if col not in existing_cols]
+    return df[existing_cols + remaining_cols]
+df_total = reorder_columns(df_total)
+df_envio = reorder_columns(df_envio)
+df_comentados = reorder_columns(df_comentados)
+df_criticos = reorder_columns(df_criticos)
+df_sin_envio = reorder_columns(df_sin_envio)
 
-# Utilizamos la función para aplicar todos los estilos y coloreado del excel
-apply_excel_styles(today_date_str)
+# === EXPORTAR A EXCEL ===
+output_path = fr'C:\Users\alejandro.berzal\Desktop\DATA SCIENCE\new-monitoring-report\monitoring_report_{today_date_str}.xlsx'
+with pd.ExcelWriter(output_path, engine='openpyxl', datetime_format='DD/MM/YYYY') as writer:
+    df_total.to_excel(writer, sheet_name='ALL DOC.', index=False)
+    df_envio.to_excel(writer, sheet_name='ENVIADOS', index=False)
+    df_comentados.to_excel(writer, sheet_name='DEVOLUCIONES', index=False)
 
-# Eliminamos la sheet evaluation warning que nos genera ASPOSECELLS
-df_final = load_workbook("Monitoring_Report_" + str(today_date_str) + ".xlsx")
-# Verificar si la hoja "Evaluation Warning" existe
-if "Evaluation Warning" in df_final.sheetnames:
-    del df_final["Evaluation Warning"] # Eliminar la hoja "Evaluation Warning"
+    # Filtrar CRÍTICOS con menos de 15 días o nulos
+    df_criticos_menor15 = df_criticos[(df_criticos['Días Devolución'] <= 15) | (df_criticos['Días Devolución'].isna())].copy()
+    df_criticos_menor15.to_excel(writer, sheet_name='CRÍTICOS', index=False)
 
-# Guardar los cambios en el archivo
-df_final.save("Monitoring_Report_" + str(today_date_str) + ".xlsx")
-df_final.save("Z:\\JOSE\\01 MONITORING REPORT\\Monitoring_Report_" + str(today_date_str) + ".xlsx")
-print("¡Exito! ¡Archivo Excel guardado en la carpeta Z:\\JOSE\\01 MONITORING REPORT\\monitoring_report...!")
-print("Duración del proceso: {} seconds".format(time.time() - start_time))
+    # CRÍTICOS con más de 15 días
+    df_criticos_mas15 = df_criticos[df_criticos['Días Devolución'] > 15].copy()
+    df_criticos_mas15.to_excel(writer, sheet_name='CRÍTICOS +15d', index=False)
+
+    # SIN ENVIAR
+    df_sin_envio.to_excel(writer, sheet_name='SIN ENVIAR', index=False)
+
+    # GRÁFICO DE TARTA EN "STATUS GLOBAL
+    status_global.to_excel(writer, sheet_name='STATUS GLOBAL', index=False)
+
+
+# === FORMATO FECHAS, FILTRO, ORDEN Y AJUSTE COLUMNAS ===
+fechas_cols = ["Fecha", "Fecha Pedido", "Fecha Prevista", "Fecha Dev. Doc.", "Fecha Env. Doc.", "Fecha Doc."]
+wb = load_workbook(output_path)
+for ws in wb.worksheets:
+    header_map = {cell.value: idx + 1 for idx, cell in enumerate(ws[1])}
+
+    # Formato fechas
+    for col_name in fechas_cols:
+        if col_name in header_map:
+            col_idx = header_map[col_name]
+            for cell in ws.iter_cols(min_col=col_idx, max_col=col_idx, min_row=2):
+                for c in cell:
+                    c.number_format = 'DD/MM/YYYY'
+
+    # Filtro automático
+    ws.auto_filter.ref = ws.dimensions
+
+    # Orden descendente por Nº Pedido
+    if 'Nº Pedido' in header_map:
+        col_idx = header_map['Nº Pedido']
+        data_rows = list(ws.iter_rows(min_row=2, values_only=True))
+        data_rows_sorted = sorted(data_rows, key=lambda x: x[col_idx - 1] if x[col_idx - 1] else 0, reverse=True)
+        for i, row in enumerate(data_rows_sorted, start=2):
+            for j, value in enumerate(row, start=1):
+                ws.cell(row=i, column=j, value=value)
+
+    # Ajuste automático ancho columnas según encabezado
+    for col_cells in ws.iter_cols(min_row=1, max_row=1):
+        max_length = 0
+        col_letter = col_cells[0].column_letter
+        for cell in col_cells:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        ws.column_dimensions[col_letter].width = max_length + 5
+
+wb.save(output_path)
+
+
+# === GRÁFICO DE BARRAS APILADAS EN "STATUS GLOBAL" ===
+from openpyxl import load_workbook
+from openpyxl.chart import BarChart, Reference, Series
+
+wb = load_workbook(output_path)
+
+if "STATUS GLOBAL" in wb.sheetnames:
+    ws = wb["STATUS GLOBAL"]
+
+    # Buscar encabezados
+    headers = [cell.value for cell in ws[1]]
+
+    # Determinar las columnas que quieres graficar
+    estado_cols = ["Aprobado", "Com. Mayores", "Com. Menores", "Enviado", "Rechazado", "Sin Enviar"]
+    col_indices = [headers.index(col) + 1 for col in estado_cols]  # +1 porque Excel es 1-based
+
+    # Rango de pedidos (columna A, desde fila 2 hasta el final)
+    min_row = 2
+    max_row = ws.max_row
+    pedidos = Reference(ws, min_col=1, min_row=min_row, max_row=max_row)
+
+    # Rango de datos (de B a G, según tus columnas seleccionadas)
+    min_col = min(col_indices)
+    max_col = max(col_indices)
+    data = Reference(ws, min_col=min_col, max_col=max_col, min_row=1, max_row=max_row)
+
+    # Crear gráfico de barras apiladas
+    chart = BarChart()
+    chart.type = "col"  # columnas verticales
+    chart.title = "Estado por Pedido"
+    chart.style = 12
+    chart.grouping = "stacked"  # <- apiladas
+    chart.overlap = 100
+    chart.y_axis.title = "Nº Documentos"
+    chart.x_axis.title = "Nº Pedido"
+
+    chart.add_data(data, titles_from_data=True)
+    chart.set_categories(pedidos)
+
+    chart.height = 16
+    chart.width = 29
+
+    # Insertar gráfico en la hoja
+    ws.add_chart(chart, "J3")
+
+    wb.save(output_path)
+    print("✅ Gráfico de barras apiladas añadido correctamente en la hoja de datos: 'STATUS GLOBAL'.")
+else:
+    print("⚠️ ERROR: No se encontró la hoja 'STATUS GLOBAL'.")
+
+# === FUNCIONES DE COLORES Y ESTILOS EXCEL ===
+def apply_excel_styles(archivo_excel):
+    from openpyxl import load_workbook
+    from openpyxl.styles import PatternFill, Font, Border, Side, NamedStyle
+    from openpyxl.styles.differential import DifferentialStyle
+    from openpyxl.formatting.rule import Rule
+    from openpyxl.styles import Font
+
+    workbook = load_workbook(archivo_excel)
+
+    # === Estilos básicos ===
+    fill_light = PatternFill(start_color="D4DCF4", end_color="D4DCF4", fill_type="solid")
+    fill_dark = PatternFill(start_color="6678AF", end_color="6678AF", fill_type="solid")
+    font_white = Font(color='FFFFFF', bold=True)
+    font_black = Font(color='000000')
+    border_medium = Border(left=Side(style='thin'), right=Side(style='thin'),
+                           top=Side(style='thin'), bottom=Side(style='thin'))
+
+    # === Regla fila Días Devolución > 15 en PENDIENTES ===
+    diff_pendientes = DifferentialStyle(fill=PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid"))
+
+    # === Función para aplicar estilo general a una hoja ===
+    def style_sheet(sheet, tab_color):
+        sheet.sheet_properties.tabColor = tab_color
+        sheet.freeze_panes = sheet['B2']
+        max_col = sheet.max_column
+        max_row = sheet.max_row
+
+        # Cabecera
+        for cell in sheet[1]:
+            cell.fill = fill_dark
+            cell.font = font_white
+            cell.border = border_medium
+
+        # Celdas del resto del cuerpo
+        for row in sheet.iter_rows(min_row=2):
+            for cell in row:
+                cell.fill = fill_light
+                cell.font = font_black
+                cell.border = border_medium
+
+        # === Filtro automático ===
+        sheet.auto_filter.ref = sheet.dimensions
+
+        # === Regla fila completa PENDIENTES Días Devolución > 15 ===
+        if sheet.title == "DEVOLUCIONES":
+            col_idx = None
+            for idx, cell in enumerate(sheet[1], start=1):
+                if cell.value == "Días Devolución":
+                    col_idx = idx
+                    break
+            if col_idx:
+                col_letter = sheet.cell(row=2, column=col_idx).column_letter
+                formula = f"=${col_letter}2>15"
+                rule_full_row = Rule(type="expression", formula=[formula], dxf=diff_pendientes, stopIfTrue=False)
+                rango_filas = f"A2:{sheet.cell(row=2, column=max_col).column_letter}{max_row}"
+                sheet.conditional_formatting.add(rango_filas, rule_full_row)
+
+    # === Colores de pestañas ===
+    hoja_colores = {
+        'ALL DOC.': "0072C8",
+        'ENVIADOS': "B1E1B9",
+        'DEVOLUCIONES': "E26B0A",
+        'CRÍTICOS': "FFFF46",
+        'CRÍTICOS +15d': "FF0000",
+        'SIN ENVIAR' : "D9D9D9",
+        'STATUS GLOBAL': "FF5B5B"
+    }
+
+    # === Aplicar estilos a todas las hojas ===
+    for hoja, color in hoja_colores.items():
+        if hoja in workbook.sheetnames:
+            style_sheet(workbook[hoja], color)
+
+    # === Colorear columna Estado con fondo y negrita ===
+    estado_colores = {
+        "Rechazado": "FFA19A",
+        "Com. Menores": "FFE5AD",
+        "Com. Mayores": "DBB054",
+        "Comentado": "F79646",
+        "Enviado": "B1E1B9",
+        "Sin Enviar": "FFFFAB",
+        "Información": "FFFF46",
+        "HOLD": "FF0909",
+        "Aprobado": "00D25F"
+    }
+
+    for sheet in workbook.worksheets:
+        col_estado_idx = None
+        for idx, cell in enumerate(sheet[1], start=1):
+            if cell.value == "Estado":
+                col_estado_idx = idx
+                break
+        if col_estado_idx:
+            for row in sheet.iter_rows(min_row=2):
+                estado_val = row[col_estado_idx - 1].value
+                if estado_val in estado_colores:
+                    color_hex = estado_colores[estado_val]
+                    row[col_estado_idx - 1].fill = PatternFill(start_color=color_hex,
+                                                               end_color=color_hex,
+                                                               fill_type="solid")
+                    #row[col_estado_idx - 1].font = Font(bold=True) #Añadir que sea negrita
+
+
+    # === Colorear columnas Responsable y Repsonsable solo texto y negrita ===
+    responsables_colores = {
+        "SS": "B22222",  # Azul marino oscuro
+        "JM": "2E8B57",  # Verde esmeralda
+        "JV": "007BA7",  # Azul petróleo
+        "EC": "C71585",  # Rosa intenso (magenta oscuro)
+        "ES": "6A0DAD",  # Púrpura fuerte
+        "JP": "00509E",  # Azul profesional
+        "AC": "4B0082",  # Índigo
+        "CCH": "333333",  # Gris oscuro casi negro
+        "LB": "1C86EE",  # Azul brillante
+        "RM": "228B22",  # Verde bosque
+        "RP": "1B365D",  # Rojo oscuro
+        "EC/SS": "228B22" # Verde bosque
+    }
+
+    for sheet in workbook.worksheets:
+        # Buscar índices de las columnas 'Responsable' y 'Repsonsable'
+        col_indices = []
+        for idx, cell in enumerate(sheet[1], start=1):
+            if cell.value in ["Responsable", "Repsonsable"]:
+                col_indices.append(idx)
+
+        # Aplicar colores y negrita a ambas columnas si existen
+        for col_idx in col_indices:
+            for row in sheet.iter_rows(min_row=2):
+                val = row[col_idx - 1].value
+                if val in responsables_colores:
+                    color_hex = responsables_colores[val]
+                    row[col_idx - 1].font = Font(color=color_hex, bold=True)
+
+    # === Colorear columna Crítico si contiene "Sí" (rojo y negrita) ===
+    for sheet in workbook.worksheets:
+        # Buscar índices de las columnas
+        col_critico_idx = None
+        col_dias_idx = None
+        for idx, cell in enumerate(sheet[1], start=1):
+            if cell.value == "Crítico":
+                col_critico_idx = idx
+            elif cell.value == "Días Devolución":
+                col_dias_idx = idx
+
+        # Aplicar formato independiente por columna
+        if col_critico_idx:
+            for row in sheet.iter_rows(min_row=2):
+                if row[col_critico_idx - 1].value == "Sí":
+                    row[col_critico_idx - 1].font = Font(color="FF0000", bold=True)
+
+        if col_dias_idx:
+            for row in sheet.iter_rows(min_row=2):
+                valor = row[col_dias_idx - 1].value
+                if valor is not None and isinstance(valor, (int, float)) and valor > 15:
+                    row[col_dias_idx - 1].font = Font(color="FF0000", bold=True)
+
+    # === Ajustar ancho de todas las columnas automáticamente ===
+    for sheet in workbook.worksheets:
+        for col_cells in sheet.columns:
+            max_length = 0
+            col_letter = col_cells[0].column_letter
+            for cell in col_cells:
+                if cell.value:
+                    cell_length = len(str(cell.value))
+                    if cell_length > max_length:
+                        max_length = cell_length
+            sheet.column_dimensions[col_letter].width = max_length + 2
+
+    workbook.save(archivo_excel)
+    print("✅ Estilos aplicados a toda la tabla de datos.")
+
+# === APLICAR ESTILOS ===
+apply_excel_styles(output_path)
+
+print(f"✅ Archivo Excel final generado en:\n{output_path}")
+print("Duración del proceso: {:.2f} segundos".format(time.time() - start_time))
