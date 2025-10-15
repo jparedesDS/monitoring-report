@@ -1,7 +1,0 @@
-pandas
-xlsxwriter
-jpype1
-aspose-cells
-openpyxl
-numpy
-sqlalchemy
