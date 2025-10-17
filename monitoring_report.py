@@ -104,24 +104,23 @@ df_sin_envio = reorder_columns(df_sin_envio)
 # === EXPORTAR A EXCEL ===
 output_path = fr'C:\Users\alejandro.berzal\Desktop\DATA SCIENCE\new-monitoring-report\monitoring_report_{today_date_str}.xlsx'
 with pd.ExcelWriter(output_path, engine='openpyxl', datetime_format='DD/MM/YYYY') as writer:
-    df_total.to_excel(writer, sheet_name='ALL DOC.', index=False)
+    # Orden de las sheets:
+    # ENVIADOS
     df_envio.to_excel(writer, sheet_name='ENVIADOS', index=False)
+    # PENDIENTES
     df_comentados.to_excel(writer, sheet_name='DEVOLUCIONES', index=False)
-
-    # Filtrar CRÍTICOS con menos de 15 días o nulos
+    # CRÍTICOS
     df_criticos_menor15 = df_criticos[(df_criticos['Días Devolución'] <= 15) | (df_criticos['Días Devolución'].isna())].copy()
     df_criticos_menor15.to_excel(writer, sheet_name='CRÍTICOS', index=False)
-
-    # CRÍTICOS con más de 15 días
+    # CRÍTICOS +15d
     df_criticos_mas15 = df_criticos[df_criticos['Días Devolución'] > 15].copy()
     df_criticos_mas15.to_excel(writer, sheet_name='CRÍTICOS +15d', index=False)
-
     # SIN ENVIAR
     df_sin_envio.to_excel(writer, sheet_name='SIN ENVIAR', index=False)
-
-    # GRÁFICO DE TARTA EN "STATUS GLOBAL
+    # ALL DOC.
+    df_total.to_excel(writer, sheet_name='ALL DOC.', index=False)
+    # GRÁFICO EN "STATUS GLOBAL"
     status_global.to_excel(writer, sheet_name='STATUS GLOBAL', index=False)
-
 
 # === FORMATO FECHAS, FILTRO, ORDEN Y AJUSTE COLUMNAS ===
 fechas_cols = ["Fecha", "Fecha Pedido", "Fecha Prevista", "Fecha Dev. Doc.", "Fecha Env. Doc.", "Fecha Doc."]
@@ -163,7 +162,8 @@ wb.save(output_path)
 
 # === GRÁFICO DE BARRAS APILADAS EN "STATUS GLOBAL" ===
 from openpyxl import load_workbook
-from openpyxl.chart import BarChart, Reference, Series
+from openpyxl.chart import BarChart, Reference
+from openpyxl.chart.shapes import GraphicalProperties
 
 wb = load_workbook(output_path)
 
@@ -173,32 +173,43 @@ if "STATUS GLOBAL" in wb.sheetnames:
     # Buscar encabezados
     headers = [cell.value for cell in ws[1]]
 
-    # Determinar las columnas que quieres graficar
+    # Columnas a graficar
     estado_cols = ["Aprobado", "Com. Mayores", "Com. Menores", "Enviado", "Rechazado", "Sin Enviar"]
     col_indices = [headers.index(col) + 1 for col in estado_cols]  # +1 porque Excel es 1-based
 
-    # Rango de pedidos (columna A, desde fila 2 hasta el final)
+    # Rango de pedidos (columna A)
     min_row = 2
     max_row = ws.max_row
     pedidos = Reference(ws, min_col=1, min_row=min_row, max_row=max_row)
 
-    # Rango de datos (de B a G, según tus columnas seleccionadas)
+    # Rango de datos
     min_col = min(col_indices)
     max_col = max(col_indices)
     data = Reference(ws, min_col=min_col, max_col=max_col, min_row=1, max_row=max_row)
 
     # Crear gráfico de barras apiladas
     chart = BarChart()
-    chart.type = "col"  # columnas verticales
+    chart.type = "col"
     chart.title = "Estado por Pedido"
     chart.style = 12
-    chart.grouping = "stacked"  # <- apiladas
+    chart.grouping = "stacked"
     chart.overlap = 100
     chart.y_axis.title = "Nº Documentos"
     chart.x_axis.title = "Nº Pedido"
 
     chart.add_data(data, titles_from_data=True)
     chart.set_categories(pedidos)
+
+    # Colores armonizados exactos para cada estado
+    colores = ["00B350",  # Aprobado
+               "C59B3F",  # Com. Mayores
+               "FFCF7F",  # Com. Menores
+               "5566A0",  # Enviado
+               "FF8273",  # Rechazado
+               "FFEF7F"]  # Sin Enviar
+
+    for i, serie in enumerate(chart.series):
+        serie.graphicalProperties = GraphicalProperties(solidFill=colores[i])
 
     chart.height = 16
     chart.width = 29
@@ -210,6 +221,7 @@ if "STATUS GLOBAL" in wb.sheetnames:
     print("✅ Gráfico de barras apiladas añadido correctamente en la hoja de datos: 'STATUS GLOBAL'.")
 else:
     print("⚠️ ERROR: No se encontró la hoja 'STATUS GLOBAL'.")
+
 
 # === FUNCIONES DE COLORES Y ESTILOS EXCEL ===
 def apply_excel_styles(archivo_excel):
@@ -252,10 +264,10 @@ def apply_excel_styles(archivo_excel):
                 cell.font = font_black
                 cell.border = border_medium
 
-        # === Filtro automático ===
+        # Filtro automático
         sheet.auto_filter.ref = sheet.dimensions
 
-        # === Regla fila completa PENDIENTES Días Devolución > 15 ===
+        # Regla fila completa PENDIENTES Días Devolución > 15
         if sheet.title == "DEVOLUCIONES":
             col_idx = None
             for idx, cell in enumerate(sheet[1], start=1):
@@ -271,16 +283,16 @@ def apply_excel_styles(archivo_excel):
 
     # === Colores de pestañas ===
     hoja_colores = {
-        'ALL DOC.': "0072C8",
-        'ENVIADOS': "B1E1B9",
-        'DEVOLUCIONES': "E26B0A",
-        'CRÍTICOS': "FFFF46",
-        'CRÍTICOS +15d': "FF0000",
-        'SIN ENVIAR' : "D9D9D9",
-        'STATUS GLOBAL': "FF5B5B"
+        'ALL DOC.': "6678AF",
+        'ENVIADOS': "00D25F",
+        'DEVOLUCIONES': "FFA19A",
+        'CRÍTICOS': "DBB054",
+        'CRÍTICOS +15d': "FF7F50",
+        'SIN ENVIAR' : "FFFF66",
+        'STATUS GLOBAL': "B1E1B9"
     }
 
-    # === Aplicar estilos a todas las hojas ===
+    # Aplicar estilos a todas las hojas
     for hoja, color in hoja_colores.items():
         if hoja in workbook.sheetnames:
             style_sheet(workbook[hoja], color)
@@ -297,7 +309,7 @@ def apply_excel_styles(archivo_excel):
         "HOLD": "FF0909",
         "Aprobado": "00D25F"
     }
-
+    # Aplicar estilos a todas las hojas
     for sheet in workbook.worksheets:
         col_estado_idx = None
         for idx, cell in enumerate(sheet[1], start=1):
@@ -317,18 +329,18 @@ def apply_excel_styles(archivo_excel):
 
     # === Colorear columnas Responsable y Repsonsable solo texto y negrita ===
     responsables_colores = {
-        "SS": "B22222",  # Azul marino oscuro
-        "JM": "2E8B57",  # Verde esmeralda
-        "JV": "007BA7",  # Azul petróleo
-        "EC": "C71585",  # Rosa intenso (magenta oscuro)
-        "ES": "6A0DAD",  # Púrpura fuerte
-        "JP": "00509E",  # Azul profesional
-        "AC": "4B0082",  # Índigo
-        "CCH": "333333",  # Gris oscuro casi negro
-        "LB": "1C86EE",  # Azul brillante
+        "SS": "A32121",  # Azul marino oscuro
+        "JM": "2C8A6A",  # Verde esmeralda
+        "JV": "006B95",  # Azul petróleo
+        "EC": "B31274",  # Rosa intenso (magenta oscuro)
+        "ES": "5A0DA0",  # Púrpura fuerte
+        "JP": "00458F",  # Azul profesional
+        "AC": "3F0075",  # Índigo
+        "CCH": "1F1F1F",  # Gris oscuro casi negro
+        "LB": "176DD1",  # Azul brillante
         "RM": "228B22",  # Verde bosque
         "RP": "1B365D",  # Rojo oscuro
-        "EC/SS": "228B22" # Verde bosque
+        "EC/SS": "1F7A1F" # Verde bosque
     }
 
     for sheet in workbook.worksheets:
@@ -346,28 +358,69 @@ def apply_excel_styles(archivo_excel):
                     color_hex = responsables_colores[val]
                     row[col_idx - 1].font = Font(color=color_hex, bold=True)
 
-    # === Colorear columna Crítico si contiene "Sí" (rojo y negrita) ===
+    # === Colorear datos en las columnas indicadas (colores, negrita y reglas condicionales) ===
     for sheet in workbook.worksheets:
         # Buscar índices de las columnas
+        col_estado_idx = None
         col_critico_idx = None
         col_dias_idx = None
+        col_info_rev_idx = None
+        col_dias_env_idx = None
         for idx, cell in enumerate(sheet[1], start=1):
+            if cell.value == "Nº Pedido":
+                col_pedido_idx = idx
+            if cell.value == "Estado":
+                col_estado_idx = idx
             if cell.value == "Crítico":
                 col_critico_idx = idx
+            if cell.value == "Info/Review":
+                col_info_rev_idx = idx
+            if cell.value == "Días Envío":
+                col_dias_env_idx = idx
             elif cell.value == "Días Devolución":
                 col_dias_idx = idx
 
         # Aplicar formato independiente por columna
+        if col_estado_idx:
+            for row in sheet.iter_rows(min_row=2):
+                if row[col_estado_idx - 1].value == "HOLD":
+                    row[col_estado_idx - 1].font = Font(color="FF0000", bold=True)
+                elif row[col_estado_idx - 1].value == "Aprobado":
+                    row[col_estado_idx - 1].font = Font(bold=True)
+
         if col_critico_idx:
             for row in sheet.iter_rows(min_row=2):
                 if row[col_critico_idx - 1].value == "Sí":
                     row[col_critico_idx - 1].font = Font(color="FF0000", bold=True)
+                #elif row[col_critico_idx - 1].value == "No":
+                    #row[col_critico_idx - 1].font = Font(color="000000", bold=True)
+
+        if col_info_rev_idx:
+            for row in sheet.iter_rows(min_row=2):
+                if row[col_info_rev_idx - 1].value == "R":
+                    row[col_info_rev_idx - 1].font = Font(color="FF0000", bold=True)
+                elif row[col_info_rev_idx - 1].value == "I":
+                    row[col_info_rev_idx - 1].font = Font(color="4D4D4D", bold=True)
+
+        if col_dias_env_idx:
+            for row in sheet.iter_rows(min_row=2):
+                if row[col_dias_env_idx - 1].value == 15:
+                    row[col_dias_env_idx - 1].font = Font(color="4D4D4D", bold=True)
 
         if col_dias_idx:
             for row in sheet.iter_rows(min_row=2):
                 valor = row[col_dias_idx - 1].value
                 if valor is not None and isinstance(valor, (int, float)) and valor > 15:
                     row[col_dias_idx - 1].font = Font(color="FF0000", bold=True)
+
+        '''# Poner toda la primera columna en negrita
+        for row in sheet.iter_rows(min_row=1):
+            cell = row[0]  # columna A
+            # Mantener bold si ya estaba en color, pero garantizar negrita
+            if cell.font:
+                cell.font = Font(name=cell.font.name, size=cell.font.size, bold=True, color=cell.font.color)
+            else:
+                cell.font = Font(bold=True)'''
 
     # === Ajustar ancho de todas las columnas automáticamente ===
     for sheet in workbook.worksheets:
@@ -380,6 +433,17 @@ def apply_excel_styles(archivo_excel):
                     if cell_length > max_length:
                         max_length = cell_length
             sheet.column_dimensions[col_letter].width = max_length + 2
+
+        # === Centrar columnas específicas ===
+    from openpyxl.styles import Alignment
+    columnas_a_centrar = ['Responsable', 'Repsonsable', 'Info/Review', 'Días Envío', 'Crítico', 'Estado', 'Días Devolución', 'Nº Revisión',
+                          'Aprobado', 'Com. Mayores', 'Com. Menores', 'Enviado', 'Rechazado', 'Sin Enviar', 'Total', '% Completado']
+
+    for sheet in workbook.worksheets:
+        for idx, cell in enumerate(sheet[1], start=1):
+            if cell.value in columnas_a_centrar:
+                for row in sheet.iter_rows(min_row=1, max_row=sheet.max_row):
+                    row[idx - 1].alignment = Alignment(horizontal='center', vertical='center')
 
     workbook.save(archivo_excel)
     print("✅ Estilos aplicados a toda la tabla de datos.")
